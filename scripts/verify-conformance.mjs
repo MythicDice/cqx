@@ -10,6 +10,7 @@ import { dirname, resolve } from 'node:path';
 import { parse, serializeCanonical, normalizeAst } from '../src/scripts/cqx-try/parser.js';
 import { EXAMPLES, ERROR_EXAMPLES } from '../src/scripts/cqx-try/examples.js';
 import { describeError } from '../src/scripts/cqx-try/diagnostics.js';
+import { faceGlyph } from '../src/scripts/cqx-try/render.js';
 
 const root = resolve(dirname(fileURLToPath(import.meta.url)), '..');
 const readVectors = (path) => JSON.parse(readFileSync(resolve(root, path), 'utf8'));
@@ -96,6 +97,27 @@ ERROR_EXAMPLES.forEach((example, index) => {
     assert(d.title && d.rule && d.suggestions.length, '教学卡片内容为空');
     assert(d.location, '教学卡片缺少源码定位');
   });
+});
+
+// face.set 必须真的切换表情，而不是只被解析器原样保留。
+check('face.set 切换表情集', () => {
+  const sets = ['default', 'qq', 'animal', 'gesture'];
+  for (const id of ['0', '14', '29']) {
+    const glyphs = sets.map((set) => faceGlyph(id, set));
+    assert(glyphs.every((g) => typeof g === 'string' && g.length > 0),
+      `编号 ${id} 未解析出表情`);
+    assert(new Set(glyphs).size === sets.length, `编号 ${id} 在不同表情集下没有切换`);
+  }
+  assert(faceGlyph('14', undefined) === faceGlyph('14', 'default'),
+    '省略 set 应使用默认表情集');
+  assert(faceGlyph('14', 'unlisted') === faceGlyph('14', 'default'),
+    '未登记的表情集应回退默认表情集');
+  assert(faceGlyph('abc', 'qq') === null, '非数字编号不应伪造表情');
+});
+
+check('一键填入示例包含 set 用法', () => {
+  assert(EXAMPLES.some((example) => /\[face[^\]]*\bset=/.test(example.code)),
+    '示例没有演示 set 参数');
 });
 
 console.log(`CQX v0.3 一致性自检：${passed} 项通过，${failures.length} 项失败` +

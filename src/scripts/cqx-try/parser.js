@@ -49,6 +49,9 @@ const REQUIRED_ATTRIBUTE = {
   link: 'href',
 };
 
+/** face 的已登记可选属性：set 切换表情集，variant 选择特殊表情形式。 */
+export const FACE_OPTIONAL = ['set', 'variant'];
+
 /** 判断字符串是否含未配对的代理码位（合法代理对按单个 Unicode 标量值处理）。 */
 function hasUnpairedSurrogate(value) {
   for (let i = 0; i < value.length; i += 1) {
@@ -128,6 +131,14 @@ function validateSemantics(node, parent) {
   }
   if (REQUIRED_ATTRIBUTE[n] && !a[REQUIRED_ATTRIBUTE[n]]) {
     return ['E_SCHEMA', `${n} 需要非空的 ${REQUIRED_ATTRIBUTE[n]} 属性`];
+  }
+  // set 用于选择表情集，variant 用于选择特殊形式；写出时必须是非空字符串。
+  if (n === 'face') {
+    for (const key of FACE_OPTIONAL) {
+      if (key in a && !a[key]) {
+        return ['E_SCHEMA', `face 的 ${key} 必须是非空字符串`];
+      }
+    }
   }
   if (n === 'code' && node.mode === 'block' &&
       node.children.some((child) => child.type !== 'text')) {

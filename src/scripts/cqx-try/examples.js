@@ -15,10 +15,12 @@ C:\\Users\\Alice
 \\\\`,
   },
   {
-    label: '提及与表情',
+    label: '提及与表情集',
     code: `[@10001] 早上好，记得看一下文档 [face 14]
 [@all] 下午三点开会，别迟到～
 [face 0] [face 23] [face 29] [face 999]
+[face 14] [face 14 set=qq] [face 14 set=animal] [face 14 set=gesture]
+[face 14 set=qq variant=super]
 [:at id="10002"/]`,
   },
   {
@@ -53,7 +55,7 @@ C:\\Users\\Alice
   {
     label: '合并转发：聊天记录',
     code: `[forward]
-  [msg user=10001 name="Alice" time="2026-11-06T09:30:00+08:00"]早上好 [@10002]！[face 14][/msg]
+  [msg user=10001 name="Alice" time="2026-11-06T09:30:00+08:00"]早上好 [@10002]！[face 14 set=qq][/msg]
   [msg user=10002 name="Bob"]这张图给你：[img "/cqx-sample.png"][/msg]
   [msg user=10003 name="Cindy"]收到 [b]谢谢[/b]！[/msg]
 [/forward]

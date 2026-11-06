@@ -12,7 +12,7 @@ description: "CQX v0.3 的原子元素、容器元素、原样围栏、必需属
 | `at` | `[@123]`、`[@all]` | `id` 或 `type=all` | — | 提及用户或全体成员 |
 | `img` | `[img cat.png]` | `src` | `alt` | 图片 |
 | `reply` | `[reply 42]` | `id` | `platform`、`account`、`channel` | 回复引用 |
-| `face` | `[face 14]` | `id` | `set`、`variant` | 平台表情 |
+| `face` | `[face 14]` | `id` | `set`、`variant` | 表情 |
 | `audio` | `[audio voice.ogg]` | `src` | — | 音频 |
 | `video` | `[video demo.mp4]` | `src` | — | 视频 |
 | `file` | `[file report.pdf]` | `src` | `name` | 文件 |
@@ -28,7 +28,7 @@ description: "CQX v0.3 的原子元素、容器元素、原样围栏、必需属
 [img "cat photo.png" alt="猫"]
 [audio voice.ogg][video demo.mp4]
 [file report.pdf name="季度报告.pdf"]
-[face 14] [face 14 variant=super]
+[face 14] [face 14 set=qq] [face 14 variant=super]
 ```
 
 > **注意**
@@ -46,6 +46,24 @@ description: "CQX v0.3 的原子元素、容器元素、原样围栏、必需属
 ```
 
 引用作用域的三个属性均为字符串，解析器不做数值或布尔转换。
+
+### 表情集
+
+`face.id` 是表情在表情集内的编号。`set` 显式指定表情集，省略时使用默认表情集。同一个 `id` 在不同表情集里可以对应不同表情：
+
+```text
+[face 14] [face 14 set=qq] [face 14 set=animal]
+[:face id="14" set="qq"/]
+```
+
+`variant` 选择特殊表情形式，例如超级表情。两个可选属性写出时必须是非空字符串；未登记的表情集名称回退默认表情集：
+
+```text
+[face 14 variant=super]
+[face 14 set=qq variant=super]
+```
+
+😀 这类 Unicode emoji 直接写在正文里，`face` 用于表情集内的编号表情。
 
 ### 资源标识符
 

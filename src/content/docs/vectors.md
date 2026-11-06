@@ -21,6 +21,9 @@ description: "合法输入的规范化结果、非法输入的诊断代码、简
 | `[file a.pdf name="报告.pdf"]` | `[:file name="报告.pdf" src="a.pdf"/]` |
 | `[link https://a.test/a/]网页[/link]` | `[:link href="https://a.test/a/"]网页[/link]` |
 | `[reply 00123]` | `[:reply id="00123"/]` |
+| `[face 14 set=qq]` | `[:face id="14" set="qq"/]` |
+| `[:face id="14" set="qq" variant="super"/]` | `[:face id="14" set="qq" variant="super"/]` |
+| `[face 14 set="animal pack"]` | `[:face id="14" set="animal pack"/]` |
 | `[b]重要[/b]` | `[:b]重要[/b]` |
 | `[:x b=2 a=1/]` | `[:x a="1" b="2"/]` |
 | `[:x][/x]` | `[:x][/x]` |
@@ -83,6 +86,8 @@ description: "合法输入的规范化结果、非法输入的诊断代码、简
 | `[:code][@all][/code]` | `E_SCHEMA` |
 | `[msg name=Alice]你好[/msg]` | `E_PARENT` |
 | `[forward][msg]缺属性[/msg][/forward]` | `E_SCHEMA` |
+| `[:face id="14" set=""/]` | `E_SCHEMA` |
+| `[:face id="14" variant=""/]` | `E_SCHEMA` |
 
 ## 简化文法
 

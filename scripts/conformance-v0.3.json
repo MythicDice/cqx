@@ -50,6 +50,22 @@
       "canonical": "[:face id=\"14\" variant=\"super\"/]"
     },
     {
+      "input": "[face 14 set=qq]",
+      "canonical": "[:face id=\"14\" set=\"qq\"/]"
+    },
+    {
+      "input": "[:face id=\"14\" set=\"qq\" variant=\"super\"/]",
+      "canonical": "[:face id=\"14\" set=\"qq\" variant=\"super\"/]"
+    },
+    {
+      "input": "[face 14 set=\"animal pack\"]",
+      "canonical": "[:face id=\"14\" set=\"animal pack\"/]"
+    },
+    {
+      "input": "[face 14 set=gesture]",
+      "canonical": "[:face id=\"14\" set=\"gesture\"/]"
+    },
+    {
       "input": "[b]重点[/b]",
       "canonical": "[:b]重点[/b]"
     },
@@ -189,6 +205,14 @@
     },
     {
       "input": "[forward][msg]无属性[/msg][/forward]",
+      "code": "E_SCHEMA"
+    },
+    {
+      "input": "[:face id=\"14\" set=\"\"/]",
+      "code": "E_SCHEMA"
+    },
+    {
+      "input": "[:face id=\"14\" variant=\"\"/]",
       "code": "E_SCHEMA"
     }
   ]

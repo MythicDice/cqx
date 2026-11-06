@@ -21,11 +21,42 @@ const el = (tag, cls, text) => {
   return node;
 };
 
-const FACES = [
-  '😀', '😄', '😁', '😂', '🙂', '😉', '😊', '😇', '🥰', '😍',
-  '😘', '😋', '😜', '🤔', '😐', '😴', '😎', '🥳', '😕', '😢',
-  '😭', '😠', '👍', '👏', '🙏', '💪', '🎉', '❤️', '🌹', '🐱',
-];
+/* face.set 选择的表情集。同一个 id 在不同表情集里对应不同表情；
+ * 未登记的名称回退默认集，不改动消息树里的原始 set 值。
+ */
+const FACE_SETS = {
+  default: [
+    '😀', '😄', '😁', '😂', '🙂', '😉', '😊', '😇', '🥰', '😍',
+    '😘', '😋', '😜', '🤔', '😐', '😴', '😎', '🥳', '😕', '😢',
+    '😭', '😠', '👍', '👏', '🙏', '💪', '🎉', '❤️', '🌹', '🐱',
+  ],
+  qq: [
+    '😌', '😃', '😄', '😁', '😆', '😅', '🤣', '😂', '🙂', '🙃',
+    '😉', '😊', '😇', '🥰', '😍', '🤩', '😘', '😗', '😚', '😙',
+    '😋', '😛', '😜', '🤪', '😝', '🤑', '🤗', '🤭', '🤫', '🤔',
+  ],
+  animal: [
+    '🐶', '🐱', '🐭', '🐹', '🐰', '🦊', '🐻', '🐼', '🐨', '🐯',
+    '🦁', '🐮', '🐷', '🐸', '🐵', '🙈', '🙉', '🙊', '🐔', '🐧',
+    '🐦', '🐤', '🦆', '🦅', '🦉', '🦇', '🐺', '🐴', '🦄', '🐝',
+  ],
+  gesture: [
+    '👍', '👎', '👌', '✌️', '🤞', '🤟', '🤘', '🤙', '👈', '👉',
+    '👆', '👇', '☝️', '✋', '🤚', '🖐️', '🖖', '👋', '🤝', '🙏',
+    '💪', '✊', '👊', '🤛', '🤜', '👏', '🙌', '👐', '🤲', '🫶',
+  ],
+};
+
+/** 按表情集解析编号；非数字编号返回 null，由渲染器显示为可读标签。 */
+export function faceGlyph(id, set) {
+  const list = typeof set === 'string' && Object.hasOwn(FACE_SETS, set)
+    ? FACE_SETS[set]
+    : FACE_SETS.default;
+  const raw = String(id ?? '');
+  if (!/^\d+$/.test(raw)) return null;
+  const n = Number(raw);
+  return Number.isFinite(n) ? list[n % list.length] : null;
+}
 
 /** 引用型元素：reply 是回复，原子 msg 是 [ref]，原子 forward 是引用已有转发。 */
 function isQuote(node) {
@@ -145,11 +176,17 @@ function renderImage(node, stats) {
 
 function renderFace(node) {
   const id = node.attrs.id ?? '';
-  const n = Number(id);
-  if (/^\d+$/.test(String(id)) && Number.isFinite(n)) {
-    return el('span', 'cqx-face', FACES[n % FACES.length]);
-  }
-  return el('span', 'cqx-chip', `表情 ${id}`);
+  const set = node.attrs.set;
+  const glyph = faceGlyph(id, set);
+  if (glyph === null) return el('span', 'cqx-chip', `表情 ${id}`);
+  const cls = node.attrs.variant === 'super' ? 'cqx-face cqx-face-super' : 'cqx-face';
+  const span = el('span', cls, glyph);
+  span.title = set
+    ? (Object.hasOwn(FACE_SETS, set)
+      ? `face id=${id} set=${set}`
+      : `face id=${id} set=${set}（未登记，按默认表情集显示）`)
+    : `face id=${id}`;
+  return span;
 }
 
 function renderAt(node) {

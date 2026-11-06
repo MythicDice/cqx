@@ -99,7 +99,7 @@ const CATALOG = {
   E_SCHEMA: {
     title: '元素缺少必需属性或结构不对',
     summary: '元素本身合法，但它的属性或原子／容器形式不符合内置元素的规定。',
-    rule: '内置元素有固定的属性要求：`img`、`file`、`audio`、`video` 需要 `src`；`face`、`reply`、`ref` 需要 `id`；`link` 需要 `href`；`at` 需要非空 `id` 或 `type=all`；容器 `forward` 至少包含一条 `msg`；容器 `msg` 需要 `user` 或 `name`；`code` 只能包含纯文本子节点；`msg` 的 `time` 必须是带时区的 RFC 3339 时间戳。',
+    rule: '内置元素有固定的属性要求：`img`、`file`、`audio`、`video` 需要 `src`；`face`、`reply`、`ref` 需要 `id`；`link` 需要 `href`；`at` 需要非空 `id` 或 `type=all`；`face` 的 `set` 与 `variant` 写出时必须是非空字符串；容器 `forward` 至少包含一条 `msg`；容器 `msg` 需要 `user` 或 `name`；`code` 只能包含纯文本子节点；`msg` 的 `time` 必须是带时区的 RFC 3339 时间戳。',
     lesson: '解析器在生成消息树时会逐项检查这些约束，避免把残缺元素传递到后续环节。',
     suggestions: [
       '补上诊断信息里点名的必需属性',
@@ -320,6 +320,11 @@ function refine(code, detail, error, source) {
     }
     if (detail.includes('at 必须')) {
       out.example = { label: '提及的两种写法', code: '[@123] 和 [@all]' };
+    }
+    if (detail.includes('set 必须是非空') || detail.includes('variant 必须是非空')) {
+      const attr = detail.includes('set 必须是非空') ? 'set' : 'variant';
+      out.suggestions.push(`把 \`${attr}\` 写成非空字符串，例如 \`set=qq\` 或 \`variant=super\``);
+      out.example = { label: '带表情集的表情', code: '[face 14 set=qq variant=super]' };
     }
     return out;
   }
