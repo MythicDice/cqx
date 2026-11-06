@@ -70,16 +70,15 @@ C:\\Users\\Alice
 [:forward id="f123"/]`,
   },
   {
-    label: '原样代码',
-    code: `[code raw]
+    label: '原样围栏',
+    code: `[code]
 print("[@all]")
 print("[img cat.png]")
-print("\\[/code]")
 [/code]
 
-[code]status = [b]ok[/b][/code]
-[code raw]第一行
-第二行[/code]`,
+[raw]这里的 [@all] 是普通文字[/raw]
+[code#]print("[/code]")[/code#]
+[code lang=python]print("hello")[/code]`,
   },
   {
     label: '扩展元素',
@@ -87,7 +86,7 @@ print("\\[/code]")
   [:acme.option id="a" label="披萨"/]
   [:acme.option id="b" label="寿司"/]
 [/acme.poll]
-[:acme.badge text="v0.2"/]
+[:acme.badge text="v0.3"/]
 [:vendor.card title="自定义卡片"]内容[/vendor.card]
 [:x b=2 a=1/]`,
   },
@@ -140,10 +139,10 @@ export const ERROR_EXAMPLES = [
     code: `[img "/cqx-sample.png" alt="站点内图片]`,
   },
   {
-    label: '原样代码未闭合',
+    label: '原样围栏未闭合',
     expect: 'E_RAW_CLOSE',
-    code: `[code raw]
-print("[@all]")`,
+    code: `[code#]
+print("[/code]")`,
   },
   {
     label: '消息放错位置',

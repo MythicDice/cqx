@@ -28,8 +28,8 @@ const CATALOG = {
   },
   E_NAME: {
     title: '元素名不被认识',
-    summary: '这里要么缺少元素名，要么用了一个 v0.2 未登记的简写。',
-    rule: 'v0.2 的简写表是固定的：`at`、`img`、`face`、`reply`、`ref`、`b`、`i`、`code`、`link`、`msg`、`forward`、`file`、`audio`、`video`。其他元素一律使用通用写法 `[:名称 属性=值/]`。元素名以字母开头，可含字母、数字、下划线、点与连字符。',
+    summary: '这里要么缺少元素名，要么用了一个未登记的简写。',
+    rule: 'v0.3 的简写表是固定的：`at`、`img`、`face`、`reply`、`ref`、`b`、`i`、`code`、`link`、`msg`、`forward`、`file`、`audio`、`video`；`code` 与 `raw` 另有原样围栏写法。其他元素一律使用通用写法 `[:名称 属性=值/]`。元素名以字母开头，可含字母、数字、下划线、点与连字符。',
     lesson: '固定简写表让「`[note]`」这类普通方括号文本可以原样保留，同时也让未知元素有唯一的写法。',
     suggestions: [
       '把未知简写改成 `[:名称 ...]` 通用写法',
@@ -99,7 +99,7 @@ const CATALOG = {
   E_SCHEMA: {
     title: '元素缺少必需属性或结构不对',
     summary: '元素本身合法，但它的属性或原子／容器形式不符合内置元素的规定。',
-    rule: '内置元素有固定的属性要求：`img`、`file`、`audio`、`video` 需要 `src`；`face`、`reply`、`ref` 需要 `id`；`link` 需要 `href`；`at` 需要非空 `id` 或 `type=all`；容器 `forward` 至少包含一条 `msg`；`msg` 的 `time` 必须是带时区的 RFC 3339 时间戳。',
+    rule: '内置元素有固定的属性要求：`img`、`file`、`audio`、`video` 需要 `src`；`face`、`reply`、`ref` 需要 `id`；`link` 需要 `href`；`at` 需要非空 `id` 或 `type=all`；容器 `forward` 至少包含一条 `msg`；容器 `msg` 需要 `user` 或 `name`；`code` 只能包含纯文本子节点；`msg` 的 `time` 必须是带时区的 RFC 3339 时间戳。',
     lesson: '解析器在生成消息树时会逐项检查这些约束，避免把残缺元素传递到后续环节。',
     suggestions: [
       '补上诊断信息里点名的必需属性',
@@ -109,15 +109,15 @@ const CATALOG = {
     example: { label: '带必需属性的图片', code: '[img "cat.png"]' },
   },
   E_RAW_CLOSE: {
-    title: '原样代码没有结束标记',
-    summary: '`[code raw]` 之后一直没有遇到结束的 `[/code]`。',
-    rule: '`[code raw]…[/code]` 之间的内容按字面读取，内部的 `[@…]`、`[img …]` 都不会被解析。要在正文里写出字面的 `[/code]`，必须写成 `\\[/code]`。',
-    lesson: '只有未转义的 `[/code]` 会结束原样代码，所以代码块里可以安全地粘贴任意 CQX 文本。',
+    title: '原样围栏没有结束标记',
+    summary: '`[code]` 或 `[raw]` 之后一直没有遇到完全匹配的结束围栏。',
+    rule: '`[code#]…[/code#]` 之间的内容按字面读取，内部的 `[@…]`、`[img …]` 都不会被解析。结束围栏的名称与 `#` 数量必须和开始围栏完全一致；正文里出现 `[/code]` 时，把开始与结束围栏都加一个 `#`。',
+    lesson: '结束围栏不受反斜杠影响，加长 `#` 数量即可避开正文里的字面标记。v0.2 的 `[code raw]` 仍可用，它用 `\\[/code]` 表示字面关闭标记。',
     suggestions: [
-      '补上结束标记 `[/code]`',
-      '正文里的字面关闭标记写成 `\\[/code]`',
+      '补上与开始围栏完全一致的结束围栏',
+      '正文含字面 `[/code]` 时，把围栏写成 `[code#]…[/code#]`',
     ],
-    example: { label: '完整的原样代码', code: '[code raw]print("[@all]")[/code]' },
+    example: { label: '完整的原样围栏', code: '[code]print("[@all]")[/code]' },
   },
   E_UNICODE: {
     title: '文本里有不完整的字符',
@@ -155,7 +155,7 @@ const CATALOG = {
   E_UNKNOWN: {
     title: '解析未能完成',
     summary: '解析器抛出了一个未归类的错误。',
-    rule: 'CQX v0.2 的诊断码包括 `E_TAG`、`E_NAME`、`E_ATTR`、`E_ATTR_DUP`、`E_CLOSE`、`E_SHORT_CLOSE`、`E_PARENT`、`E_SCHEMA`、`E_RAW_CLOSE`、`E_UNICODE`、`E_LIMIT`。',
+    rule: 'CQX v0.3 沿用 v0.2 的诊断码：`E_TAG`、`E_NAME`、`E_ATTR`、`E_ATTR_DUP`、`E_CLOSE`、`E_SHORT_CLOSE`、`E_PARENT`、`E_SCHEMA`、`E_RAW_CLOSE`、`E_UNICODE`、`E_LIMIT`。',
     lesson: '可以先对照原始诊断信息，或清空后从示例重新开始。',
     suggestions: ['清空编辑器，从一键填入示例重新开始'],
     example: null,
@@ -233,7 +233,9 @@ function refine(code, detail, error, source) {
   }
 
   if (code === 'E_RAW_CLOSE') {
-    out.fix = { label: '补上 [/code]', text: source + '[/code]' };
+    const m = /缺少结束围栏 (\[\/[^\]]+\])/.exec(detail);
+    const closing = m ? m[1] : '[/code]';
+    out.fix = { label: `补上 ${closing}`, text: source + closing };
     return out;
   }
 

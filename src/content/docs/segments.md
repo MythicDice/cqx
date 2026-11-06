@@ -1,9 +1,9 @@
 ---
 title: "内置消息元素"
-description: "CQX v0.2 的原子元素、容器元素、必需属性与资源标识符形式。"
+description: "CQX v0.3 的原子元素、容器元素、原样围栏、必需属性与资源标识符形式。"
 ---
 
-本节规定 CQX v0.2 登记的元素名称与属性含义。所有内置原子元素均可使用通用自闭合写法；简写的原子元素省略自闭合斜杠。
+本节规定 CQX v0.3 登记的元素名称与属性含义。所有内置原子元素均可使用通用自闭合写法；简写的原子元素省略自闭合斜杠。
 
 ## 原子元素
 
@@ -12,7 +12,7 @@ description: "CQX v0.2 的原子元素、容器元素、必需属性与资源标
 | `at` | `[@123]`、`[@all]` | `id` 或 `type=all` | — | 提及用户或全体成员 |
 | `img` | `[img cat.png]` | `src` | `alt` | 图片 |
 | `reply` | `[reply 42]` | `id` | `platform`、`account`、`channel` | 回复引用 |
-| `face` | `[face 14]` | `id` | — | 平台表情 |
+| `face` | `[face 14]` | `id` | `set`、`variant` | 平台表情 |
 | `audio` | `[audio voice.ogg]` | `src` | — | 音频 |
 | `video` | `[video demo.mp4]` | `src` | — | 视频 |
 | `file` | `[file report.pdf]` | `src` | `name` | 文件 |
@@ -28,6 +28,7 @@ description: "CQX v0.2 的原子元素、容器元素、必需属性与资源标
 [img "cat photo.png" alt="猫"]
 [audio voice.ogg][video demo.mp4]
 [file report.pdf name="季度报告.pdf"]
+[face 14] [face 14 variant=super]
 ```
 
 > **注意**
@@ -64,19 +65,19 @@ description: "CQX v0.2 的原子元素、容器元素、必需属性与资源标
 | --- | --- | --- | --- |
 | `b` | `[b]...[/b]` | — | 加粗样式 |
 | `i` | `[i]...[/i]` | — | 斜体样式 |
-| `code` | `[code]...[/code]` | — | 代码样式 |
+| `code` | `[code]...[/code]` | — | 原样围栏，见[原样围栏](../code/) |
 | `link` | `[link https://a.test]网页[/link]` | `href` | 超链接 |
 | `forward` | `[forward]...[/forward]` | 见[合并转发](../forward/) | 合并转发 |
-| `msg` | `[msg user=...]...[/msg]` | 见[合并转发](../forward/) | 转发消息节点 |
+| `msg` | `[msg name=...]...[/msg]` | 见[合并转发](../forward/) | 转发消息节点 |
 
-`b`、`i`、`code`、`link` 可以在正文中嵌套使用；`msg` 的直接父元素必须是 `forward` 容器。`link.href` 必须非空：
+`b`、`i`、`link` 可以在正文中嵌套使用；`code` 使用原样围栏；`msg` 的直接父元素必须是 `forward` 容器。`link.href` 必须非空：
 
 ```text
 [b]重要[/b]、[i]强调[/i]、[code]x = 1[/code]
 [link https://example.org/?q=cat&page=2]打开网页[/link]
 ```
 
-`[code]...[/code]` 中仍按普通 CQX 规则解析元素；直接粘贴含 CQX 标记的代码时，使用[原样代码](../code/)。
+`[:code]...[/code]` 按普通 CQX 规则解析，且只能产生 Text 子节点；直接粘贴含 CQX 标记的代码时，使用[原样围栏](../code/)。
 
 ## 扩展元素
 

@@ -10,7 +10,7 @@ description: "严格解析器的处理阶段、诊断代码、错误位置与资
 1. 检查输入 Unicode 标量值；以字节接收时使用严格 UTF-8 解码。
 2. 扫描正文转义和标签候选，使用固定结构空白字符表。
 3. 扫描引号及通用 `/]` 结束符，读取属性和位置参数。
-4. 匹配容器标签；`[code raw]` 使用[专用原样读取规则](../code/)。
+4. 匹配容器标签；`code` 与 `raw` 使用[原样围栏读取规则](../code/)，按名称与 `#` 数量匹配结束围栏。
 5. 形成 Text / Element 树，展开 `[@...]` 与 `ref` 等简写。
 6. 应用[消息树正规化](../model/)和语义校验。
 
@@ -28,7 +28,7 @@ description: "严格解析器的处理阶段、诊断代码、错误位置与资
 | `E_SCHEMA` | 内置元素违反结构规则 | `[img]` |
 | `E_PARENT` | 元素放置位置不合法 | 根级 `[ref 42]` |
 | `E_SHORT_CLOSE` | 没有属性值的容器简写尝试自闭合 | `[b/]` |
-| `E_RAW_CLOSE` | 原样代码缺少关闭标记 | `[code raw]...` |
+| `E_RAW_CLOSE` | 原样围栏缺少结束标记 | `[code#]...` |
 | `E_UNICODE` | Unicode 字符序列非法 | 未配对的代理码位 |
 | `E_LIMIT` | 超过实现资源限制 | 超过最大嵌套深度 |
 
@@ -46,10 +46,13 @@ description: "严格解析器的处理阶段、诊断代码、错误位置与资
 | `[:x]` | `E_CLOSE`，缺少 `[/x]` |
 | `[b]内容[/i]` | `E_CLOSE`，结束标签不匹配 |
 | `[/x]` | `E_CLOSE`，多余的结束标签 |
+| `[/note]` | 普通文本 |
+| `[code][@all][/code]` | 合法，正文为原样 `[@all]` |
+| `[:code][@all][/code]` | `E_SCHEMA`，`code` 含非 Text 子节点 |
 | `[:x a=1 a=2/]` | `E_ATTR_DUP` |
 | `[forward]hello[/forward]` | `E_SCHEMA`，`forward` 直接包含非空白文本 |
 | `[ref 42]`（根级） | `E_PARENT` |
-| `[code raw]未关闭` | `E_RAW_CLOSE` |
+| `[code#]未闭合` | `E_RAW_CLOSE` |
 
 ## 资源预算
 

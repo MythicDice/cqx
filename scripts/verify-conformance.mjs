@@ -1,5 +1,5 @@
-/* CQX v0.2 浏览器端解析器一致性自检
- * 用 reference/CQX-v0.2/conformance.json 的独立向量核对解析结果与规范化文本，
+/* CQX v0.3 浏览器端解析器一致性自检
+ * v0.3 是 v0.2 的增补与修补：同时核对 v0.2 基线向量与 v0.3 新增向量，
  * 检查 parse / serializeCanonical 的往返性质，并确认在线尝试页的示例与错例
  * 都经由真实解析器，错例确实抛出预期诊断码且带有可定位的位置。
  * 运行：pnpm verify
@@ -12,9 +12,13 @@ import { EXAMPLES, ERROR_EXAMPLES } from '../src/scripts/cqx-try/examples.js';
 import { describeError } from '../src/scripts/cqx-try/diagnostics.js';
 
 const root = resolve(dirname(fileURLToPath(import.meta.url)), '..');
-const vectors = JSON.parse(
-  readFileSync(resolve(root, 'reference/CQX-v0.2/conformance.json'), 'utf8'),
-);
+const readVectors = (path) => JSON.parse(readFileSync(resolve(root, path), 'utf8'));
+const baseline = readVectors('reference/CQX-v0.2/conformance.json');
+const current = readVectors('scripts/conformance-v0.3.json');
+const vectors = {
+  valid: [...baseline.valid, ...current.valid],
+  invalid: [...baseline.invalid, ...current.invalid],
+};
 
 let passed = 0;
 const failures = [];
@@ -94,7 +98,9 @@ ERROR_EXAMPLES.forEach((example, index) => {
   });
 });
 
-console.log(`CQX v0.2 一致性自检：${passed} 项通过，${failures.length} 项失败`);
+console.log(`CQX v0.3 一致性自检：${passed} 项通过，${failures.length} 项失败` +
+  `（v0.2 基线 ${baseline.valid.length + baseline.invalid.length} 项，` +
+  `v0.3 增补 ${current.valid.length + current.invalid.length} 项）`);
 if (failures.length) {
   for (const line of failures) console.error(`  ✗ ${line}`);
   process.exitCode = 1;

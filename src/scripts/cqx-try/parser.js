@@ -1,10 +1,10 @@
-/* CQX v0.2 浏览器端严格解析器
- * 按 reference/CQX-v0.2/cqx.py 移植：标签候选、固定简写表、属性与位置参数、
- * 原样代码、引用展开、转发空白、AST 正规化、语义校验与诊断码。
- * 解析结果为与 Python as_json() 一致的消息树；错误码与码点偏移同样对齐。
+/* CQX v0.3 浏览器端严格解析器
+ * 以 v0.2 实现为基础增补修补：标签候选、固定简写表、属性与位置参数、
+ * 原样围栏、引用展开、转发空白、AST 正规化、语义校验与诊断码。
+ * v0.2 的诊断码、码点偏移、资源预算与 [code raw] 兼容写法全部保留。
  */
 
-export const VERSION = '0.2';
+export const VERSION = '0.3';
 
 const WS = ' \t\r\n';
 const NAME_RE = /^[A-Za-z][A-Za-z0-9_.-]*/;
@@ -13,10 +13,17 @@ const KEY_FULL_RE = /^[A-Za-z_][A-Za-z0-9_.-]*$/;
 const AT_RE = /\[@([A-Za-z0-9_.-]+)\]/y;
 const CLOSE_RE = /\[\/([A-Za-z][A-Za-z0-9_.-]*)\]/y;
 const SHORT_START_RE = /\[([A-Za-z][A-Za-z0-9_.-]*)(?=[ \t\r\n/\]])/y;
+// 原样围栏：[code]、[code#]、[code## lang=python]、[raw]、[raw#]。
+const FENCE_START_RE = /\[(code|raw)(#*)(?=[ \t\r\n\]])/y;
+// 已登记名称的结束标签必须报错；未知名称的 [/name] 按正文保留。
+const KNOWN_CLOSE = new Set([
+  'at', 'img', 'reply', 'face', 'audio', 'video', 'file', 'ref',
+  'b', 'i', 'code', 'link', 'forward', 'msg', 'raw',
+]);
 const RFC3339_RE =
   /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}(?:\.\d+)?(?:Z|[+-]\d{2}:\d{2})$/;
 
-/** v0.2 冻结的简写表：位置参数对应属性。 */
+/** 冻结的简写表：位置参数对应属性。 */
 export const POSITIONAL = {
   link: 'href',
   img: 'src',
@@ -70,7 +77,7 @@ function validTimestamp(value) {
   return Number.isFinite(Date.parse(value));
 }
 
-/** 严格解析错误：code 为 v0.2 诊断码，offset 为从 0 开始的 Unicode 码点偏移。 */
+/** 严格解析错误：code 为冻结的诊断码，offset 为从 0 开始的 Unicode 码点偏移。 */
 export class CQXError extends Error {
   constructor(code, detail, source, utf16Offset = 0) {
     const before = Array.from(source.slice(0, utf16Offset));
@@ -122,6 +129,10 @@ function validateSemantics(node, parent) {
   if (REQUIRED_ATTRIBUTE[n] && !a[REQUIRED_ATTRIBUTE[n]]) {
     return ['E_SCHEMA', `${n} 需要非空的 ${REQUIRED_ATTRIBUTE[n]} 属性`];
   }
+  if (n === 'code' && node.mode === 'block' &&
+      node.children.some((child) => child.type !== 'text')) {
+    return ['E_SCHEMA', 'code 只能包含 Text 子节点'];
+  }
   if (n === 'at') {
     const byId = Boolean(a.id) && !('type' in a);
     const byType = a.type === 'all' && !('id' in a);
@@ -134,9 +145,8 @@ function validateSemantics(node, parent) {
         return ['E_SCHEMA', '原子 msg 需要非空 id，且不得含 user 或 name'];
       }
     } else if (node.mode === 'block') {
-      if (!a.user || 'id' in a) {
-        return ['E_SCHEMA', '容器 msg 需要非空 user，且不得含 id'];
-      }
+      if ('id' in a) return ['E_SCHEMA', '容器 msg 不得含 id'];
+      if (!a.user && !a.name) return ['E_SCHEMA', '容器 msg 需要 user 或 name'];
     } else {
       return ['E_SCHEMA', 'msg 模式非法'];
     }
@@ -250,7 +260,7 @@ export function encodeAttr(value) {
   return JSON.stringify(value);
 }
 
-/** 由消息树生成唯一的规范化 v0.2 文本。 */
+/** 由消息树生成唯一的规范化文本。 */
 export function serializeCanonical(nodes) {
   const normalized = normalizeAst(nodes);
   const emit = (node) => {
@@ -276,6 +286,8 @@ class Parser {
     this.maxDepth = maxDepth;
     this.maxNodes = maxNodes;
     this.numNodes = 0;
+    // 已打开容器名：通用扩展的 [/name] 需要据此识别，未知名称则按正文保留。
+    this.openStack = [];
   }
 
   error(code, detail, offset) {
@@ -299,6 +311,11 @@ class Parser {
 
   nodes(expectedClose, depth) {
     if (depth > this.maxDepth) this.error('E_LIMIT', '超过最大嵌套深度');
+    if (expectedClose !== null) this.openStack.push(expectedClose);
+    const finish = (nodes) => {
+      if (expectedClose !== null) this.openStack.pop();
+      return nodes;
+    };
     const result = [];
     let buf = '';
     const flush = () => {
@@ -328,8 +345,13 @@ class Parser {
         this.i += 1;
         continue;
       }
-      flush();
       this.i = token.end;
+      // raw 围栏只生成正文，和相邻文本自然合并，不产生元素节点。
+      if (token.kind === 'rawText') {
+        buf += this.rawFence(token);
+        continue;
+      }
+      flush();
       if (token.kind === 'close') {
         if (expectedClose === null) {
           this.error('E_CLOSE', `多余的结束标签 [/${token.name}]`, token.start);
@@ -337,11 +359,14 @@ class Parser {
         if (token.name !== expectedClose) {
           this.error('E_CLOSE', `期望 [/${expectedClose}]，实际为 [/${token.name}]`, token.start);
         }
-        return result;
+        return finish(result);
       }
       let node;
       if (token.kind === 'void') {
         node = element(token.name, token.attrs, [], 'void');
+      } else if (token.kind === 'fence') {
+        const value = this.rawFence(token);
+        node = element('code', token.attrs, value ? [text(value)] : [], 'block');
       } else {
         const children = token.raw
           ? this.rawCode(token.start)
@@ -364,10 +389,24 @@ class Parser {
     }
     flush();
     if (expectedClose !== null) this.error('E_CLOSE', `缺少结束标签 [/${expectedClose}]`);
-    return result;
+    return finish(result);
   }
 
-  /** [code raw] 正文按字面读取，只有 \[/code] 作为字面关闭标记。 */
+  /** 原样围栏：第一个与名称及 # 数量完全匹配的结束围栏终止原样区域。 */
+  rawFence(token) {
+    const closing = `[/${token.name}${token.hashes}]`;
+    const begin = this.i;
+    const at = this.s.indexOf(closing, begin);
+    if (at < 0) {
+      this.error('E_RAW_CLOSE',
+        `[${token.name}${token.hashes}] 缺少结束围栏 ${closing}`, token.start);
+    }
+    const value = this.s.slice(begin, at);
+    this.i = at + closing.length;
+    return value;
+  }
+
+  /** v0.2 兼容写法 [code raw]：正文按字面读取，只有 \[/code] 作为字面关闭标记。 */
   rawCode(start) {
     let value = '';
     while (this.i < this.s.length) {
@@ -400,7 +439,35 @@ class Parser {
     }
     m = this.match(CLOSE_RE);
     if (m) {
+      // 未知名称的 [/name] 不是结束标签，按普通正文保存。
+      if (!KNOWN_CLOSE.has(m[1]) && !this.openStack.includes(m[1])) return null;
       return { kind: 'close', name: m[1], attrs: {}, start, end: this.i + m[0].length };
+    }
+
+    // 原样围栏优先于短标签：raw 只产生正文，code 产生只有 Text 子节点的容器。
+    const fence = this.match(FENCE_START_RE);
+    if (fence) {
+      const [, fenceName, hashes] = fence;
+      const end = this.headEnd(start + 1, start);
+      const rest = s.slice(start + 1 + fenceName.length + hashes.length, end);
+      if (rest && !WS.includes(rest[0])) {
+        this.error('E_ATTR', '围栏名称后必须使用空白', start);
+      }
+      if (fenceName === 'raw' && trimWS(rest)) {
+        this.error('E_ATTR', 'raw 围栏不接受属性', start);
+      }
+      // v0.2 的 [code raw] 继续可用，沿用原有的字面关闭标记规则。
+      if (fenceName === 'code' && trimWS(rest) === 'raw') {
+        return { kind: 'open', name: 'code', attrs: {}, start, end: end + 1, raw: true };
+      }
+      return {
+        kind: fenceName === 'raw' ? 'rawText' : 'fence',
+        name: fenceName,
+        hashes,
+        attrs: fenceName === 'code' ? this.attributes(rest, null, start) : {},
+        start,
+        end: end + 1,
+      };
     }
 
     const generic = s.startsWith('[:', start);
@@ -434,9 +501,6 @@ class Parser {
     }
     if (!(SHORT_ATOMIC.has(name) || SHORT_BLOCK.has(name))) {
       this.error('E_NAME', `未登记的简写 ${name}`, start);
-    }
-    if (name === 'code' && trimWS(rest) === 'raw') {
-      return { kind: 'open', name: 'code', attrs: {}, start, end: end + 1, raw: true };
     }
     const attrs = this.attributes(rest, POSITIONAL[name] ?? null, start);
     const actual = name === 'ref' ? 'msg' : name;
@@ -538,7 +602,7 @@ class Parser {
   }
 }
 
-/** 解析 CQX v0.2 文本，返回正规化后的消息树。 */
+/** 解析 CQX v0.3 文本，返回正规化后的消息树。 */
 export function parse(source, options = {}) {
   const { maxDepth = 64, maxNodes = 10000, maxChars = 1000000 } = options;
   if (typeof source !== 'string') throw new TypeError('CQX 输入必须是字符串');

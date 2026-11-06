@@ -19,7 +19,7 @@ description: "forward 容器、自定义 msg 节点、ref 引用、原子转发�
 
 ## 自定义消息节点
 
-自定义消息节点必须为容器模式，要求非空的 `user`，禁止 `id`：
+自定义消息节点必须为容器模式，要求 `user` 或 `name` 至少一个，禁止 `id`：
 
 ```text
 [msg user=10001 name="Alice" time="2026-11-06T09:30:00+08:00"]你好！[img cat.png][/msg]
@@ -27,8 +27,8 @@ description: "forward 容器、自定义 msg 节点、ref 引用、原子转发�
 
 | 属性 | 必需 | 格式 |
 | --- | --- | --- |
-| `user` | 是 | 非空字符串 |
-| `name` | 否 | 字符串，显示名称 |
+| `user` | 与 `name` 二选一 | 非空字符串 |
+| `name` | 与 `user` 二选一 | 字符串，显示名称 |
 | `time` | 否 | RFC 3339 子集：`YYYY-MM-DDThh:mm:ss[.fraction](Z\|±hh:mm)`，秒为 00–59 |
 | `avatar` | 否 | 字符串，头像资源引用 |
 | `platform`、`account`、`channel` | 否 | 字符串，来源作用域 |
@@ -96,3 +96,4 @@ description: "forward 容器、自定义 msg 节点、ref 引用、原子转发�
 | `[ref 42]`（不在 `forward` 内） | `E_PARENT` |
 | `[:msg user=1 name=Alice/]` | `E_SCHEMA` |
 | `[:forward/]` | `E_SCHEMA` |
+| `[forward][msg]缺属性[/msg][/forward]` | `E_SCHEMA` |
