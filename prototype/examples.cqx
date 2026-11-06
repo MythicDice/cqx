@@ -1,0 +1,24 @@
+# CQX v0.1 examples — the # headings here are explanatory section separators,
+# not part of the CQX language. Treat each message separately.
+
+# Basic message
+你好 [@123456]！看看这张图片：[img cat.png]
+
+# Reply and mixed media
+[reply 903][@123] 给你这张图：[img "https://a.test/p?q=[1,2]&x=3"]
+
+# Forward tree
+[forward]
+  [msg user=10001 name="Alice"]你好！[face 14][/msg]
+  [msg user=10002 name="Bob"]第一行
+第二行[/msg]
+  [msg id=987654/]
+[/forward]
+
+# A vendor extension
+[:vendor.card title="今日菜单"]
+  [:vendor.button label="查看" action="open_menu"/]
+[/vendor.card]
+
+# Literal CQX markup in a text message
+字面量：\[@123] 与 \[img cat.png]

@@ -1,0 +1,19 @@
+你好，[@123456]！
+[reply 42]看看照片：[img https://example.org/cat.jpg?size=2]
+[link https://example.org/a/]打开网页[/link]
+
+[forward]
+  [msg user=10001 name=Alice]你好！[/msg]
+  [msg user=10002 name=Bob]看看这个：[img cat.png][/msg]
+  [ref 987654]
+[/forward]
+
+[code raw]
+print("[@all]")
+print("[img cat.png]")
+[/code]
+
+[:acme.poll title="午饭吃什么？"]
+  [:acme.option id="a" label="披萨"/]
+  [:acme.option id="b" label="寿司"/]
+[/acme.poll]

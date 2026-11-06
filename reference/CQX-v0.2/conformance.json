@@ -1,0 +1,151 @@
+{
+  "version": "0.2",
+  "valid": [
+    {
+      "input": "普通文本",
+      "canonical": "普通文本"
+    },
+    {
+      "input": "\\\\[@all]",
+      "canonical": "\\\\[:at type=\"all\"/]"
+    },
+    {
+      "input": "C:\\Users\\Alice",
+      "canonical": "C:\\\\Users\\\\Alice"
+    },
+    {
+      "input": "你好 [@123]！",
+      "canonical": "你好 [:at id=\"123\"/]！"
+    },
+    {
+      "input": "[@all]",
+      "canonical": "[:at type=\"all\"/]"
+    },
+    {
+      "input": "[img cat.png]",
+      "canonical": "[:img src=\"cat.png\"/]"
+    },
+    {
+      "input": "[img https://a.test/p/]",
+      "canonical": "[:img src=\"https://a.test/p/\"/]"
+    },
+    {
+      "input": "[img https://a.test/p?x=1&y=2]",
+      "canonical": "[:img src=\"https://a.test/p?x=1&y=2\"/]"
+    },
+    {
+      "input": "[img \"foo=bar\"]",
+      "canonical": "[:img src=\"foo=bar\"/]"
+    },
+    {
+      "input": "[file a.pdf name=\"报告.pdf\"]",
+      "canonical": "[:file name=\"报告.pdf\" src=\"a.pdf\"/]"
+    },
+    {
+      "input": "[link https://a.test/a/]网页[/link]",
+      "canonical": "[:link href=\"https://a.test/a/\"]网页[/link]"
+    },
+    {
+      "input": "[link href=https://a.test]网页[/link]",
+      "canonical": "[:link href=\"https://a.test\"]网页[/link]"
+    },
+    {
+      "input": "[code raw]print(\"[@all]\")[/code]",
+      "canonical": "[:code]print(\"\\[@all]\")[/code]"
+    },
+    {
+      "input": "[code raw]x\\[/code]y[/code]",
+      "canonical": "[:code]x\\[/code]y[/code]"
+    },
+    {
+      "input": "[:x/]",
+      "canonical": "[:x/]"
+    },
+    {
+      "input": "[:x][/x]",
+      "canonical": "[:x][/x]"
+    },
+    {
+      "input": "[:vendor.card title=\"测试\"]内容[/vendor.card]",
+      "canonical": "[:vendor.card title=\"测试\"]内容[/vendor.card]"
+    },
+    {
+      "input": "[:x b=2 a=1/]",
+      "canonical": "[:x a=\"1\" b=\"2\"/]"
+    },
+    {
+      "input": "[b]重要[/b]",
+      "canonical": "[:b]重要[/b]"
+    },
+    {
+      "input": "[forward]\n  [msg user=1 name=Alice]你好[/msg]\n  [ref 42]\n[/forward]",
+      "canonical": "[:forward][:msg name=\"Alice\" user=\"1\"]你好[/msg][:msg id=\"42\"/][/forward]"
+    },
+    {
+      "input": "[:forward id=\"f123\"/]",
+      "canonical": "[:forward id=\"f123\"/]"
+    },
+    {
+      "input": "[reply 00123]",
+      "canonical": "[:reply id=\"00123\"/]"
+    },
+    {
+      "input": "[@000123]",
+      "canonical": "[:at id=\"000123\"/]"
+    }
+  ],
+  "invalid": [
+    {
+      "input": "[img]",
+      "code": "E_SCHEMA"
+    },
+    {
+      "input": "[img foo=bar]",
+      "code": "E_SCHEMA"
+    },
+    {
+      "input": "[:x a=1 a=2/]",
+      "code": "E_ATTR_DUP"
+    },
+    {
+      "input": "[b]你好[/i]",
+      "code": "E_CLOSE"
+    },
+    {
+      "input": "[:x]",
+      "code": "E_CLOSE"
+    },
+    {
+      "input": "[ref 42]",
+      "code": "E_PARENT"
+    },
+    {
+      "input": "[forward][/forward]",
+      "code": "E_SCHEMA"
+    },
+    {
+      "input": "[forward]hello[/forward]",
+      "code": "E_SCHEMA"
+    },
+    {
+      "input": "[forward][msg id=42/][/forward]",
+      "code": "E_CLOSE"
+    },
+    {
+      "input": "[b/]",
+      "code": "E_SHORT_CLOSE"
+    },
+    {
+      "input": "[code raw]未关闭",
+      "code": "E_RAW_CLOSE"
+    },
+    {
+      "input": "[:img src=\"\"/]",
+      "code": "E_SCHEMA"
+    },
+    {
+      "input": "[link https://a.test href=https://b.test]x[/link]",
+      "code": "E_ATTR_DUP"
+    }
+  ]
+}
