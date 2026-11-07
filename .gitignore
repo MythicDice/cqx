@@ -2,5 +2,7 @@ node_modules/
 dist/
 .astro/
 .workbuddy/
+# dsnext/ 是独立仓库与独立 Pages 站点，不纳入 CQX 仓库。
+dsnext/
 .DS_Store
 *.log

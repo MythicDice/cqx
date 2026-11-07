@@ -1,0 +1,62 @@
+(* DiceScript Next v0.1 — non-executable, illustrative EBNF subset.
+   Normative semantics are specified in docs/. Whitespace, dice
+   subgrammar, escapes, interpolated string internals and layout
+   separators are abbreviated for readability. *)
+
+Program        = { Separator | Statement, { Separator, Statement } } ;
+Statement      = Declaration | Assignment | FunctionDecl
+               | WhileStmt | JumpStmt | Expr ;
+Declaration    = Identifier, [ ":", Type ], ":=", Expr ;
+Assignment     = LValue, "=", Expr ;
+LValue         = Identifier, { ".", Identifier | "[", Expr, "]" } ;
+FunctionDecl   = Identifier, "(", [ Params ], ")", [ "->", Type ], Block ;
+Params         = Param, { ",", Param } ;
+Param          = Identifier, [ ":", Type ] ;
+WhileStmt      = "while", Expr, Block ;
+JumpStmt       = "break" | "continue" | "return", [ Expr ] ;
+Block          = "{", { Separator | Statement, Separator }, [ Expr ], "}" ;
+
+Expr           = IfExpr | ConditionalExpr ;
+IfExpr         = "if", Expr, Block, [ "else", (Block | IfExpr) ] ;
+ConditionalExpr= NullExpr, [ "?", Expr, ":", ConditionalExpr ] ;
+NullExpr       = OrExpr, [ "??", NullExpr ] ;
+OrExpr         = AndExpr, { "||", AndExpr } ;
+AndExpr        = BitOrExpr, { "&&", BitOrExpr } ;
+BitOrExpr      = BitAndExpr, { "|", BitAndExpr } ;
+BitAndExpr     = EqualExpr, { "&", EqualExpr } ;
+EqualExpr      = CompareExpr, [ ("==" | "!="), CompareExpr ] ;
+CompareExpr    = ShiftExpr, [ ("<" | "<=" | ">" | ">="), ShiftExpr ] ;
+ShiftExpr      = AddExpr, { ("<<" | ">>"), AddExpr } ;
+AddExpr        = MulExpr, { ("+" | "-"), MulExpr } ;
+MulExpr        = UnaryExpr, { ("*" | "/" | "%"), UnaryExpr } ;
+UnaryExpr      = ("+" | "-" | "!" | "~"), UnaryExpr | PowExpr ;
+PowExpr        = DiceExpr, [ ("**" | "^"), PowExpr ] ;
+DiceExpr       = PostfixExpr, { "d", PostfixExpr, [ DiceModifier ] }
+               | DiceLiteral ;
+DiceModifier   = "kh", [ Integer ] | "kl", [ Integer ]
+               | "k", [ Integer ] | "q", [ Integer ]
+               | "dh", [ Integer ] | "dl", [ Integer ]
+               | "min", Integer | "max", Integer ;
+PostfixExpr    = Atom, { ".", Identifier
+               | "[", Expr, "]"
+               | "[", [ Expr ], ":", [ Expr ], "]"
+               | "(", [ Arguments ], ")" } ;
+Arguments      = Argument, { ",", Argument } ;
+Argument       = [ Identifier, ":" ], Expr ;
+Atom           = Number | String | TemplateString | RuleDiceLiteral
+               | Identifier | "true" | "false" | "null"
+               | "(", Expr, ")" | ListLiteral | ObjectLiteral
+               | Lambda ;
+Lambda         = Identifier, "=>", (Expr | Block)
+               | "(", [ Params ], ")", "=>", (Expr | Block) ;
+ListLiteral    = "[", [ Expr, "..", Expr | Expr, { ",", Expr } ], "]" ;
+ObjectLiteral  = "{", [ Member, { ",", Member }, [ "," ] ], "}" ;
+Member         = (Identifier | String), ":", Expr
+               | Identifier, "(", [ Params ], ")", [ "->", Type ], Block ;
+Type           = Identifier, [ "?" ] ;
+
+(* Terminal classes: Identifier, Number, String, TemplateString,
+   DiceLiteral, RuleDiceLiteral, Integer, Separator. DiceLiteral covers
+   d20, 3d6, 2d20kh1 etc; RuleDiceLiteral covers r"b2" etc.
+   Identifier/dice token priority and full dice modifier combinations
+   are described in docs/01-lexical-and-grammar.md. *)
