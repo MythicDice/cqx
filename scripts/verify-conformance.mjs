@@ -1,5 +1,5 @@
-/* CQX v0.3 浏览器端解析器一致性自检
- * v0.3 是 v0.2 的增补与修补：同时核对 v0.2 基线向量与 v0.3 新增向量，
+/* CQX v0.4 浏览器端解析器一致性自检
+ * v0.4 增补 poke 动作元素：同时核对 v0.2 基线向量与 v0.4 累积向量，
  * 检查 parse / serializeCanonical 的往返性质，并确认在线尝试页的示例与错例
  * 都经由真实解析器，错例确实抛出预期诊断码且带有可定位的位置。
  * 运行：pnpm verify
@@ -15,7 +15,7 @@ import { faceGlyph } from '../src/scripts/cqx-try/render.js';
 const root = resolve(dirname(fileURLToPath(import.meta.url)), '..');
 const readVectors = (path) => JSON.parse(readFileSync(resolve(root, path), 'utf8'));
 const baseline = readVectors('reference/CQX-v0.2/conformance.json');
-const current = readVectors('scripts/conformance-v0.3.json');
+const current = readVectors('scripts/conformance-v0.4.json');
 const vectors = {
   valid: [...baseline.valid, ...current.valid],
   invalid: [...baseline.invalid, ...current.invalid],
@@ -120,9 +120,9 @@ check('一键填入示例包含 set 用法', () => {
     '示例没有演示 set 参数');
 });
 
-console.log(`CQX v0.3 一致性自检：${passed} 项通过，${failures.length} 项失败` +
+console.log(`CQX v0.4 一致性自检：${passed} 项通过，${failures.length} 项失败` +
   `（v0.2 基线 ${baseline.valid.length + baseline.invalid.length} 项，` +
-  `v0.3 增补 ${current.valid.length + current.invalid.length} 项）`);
+  `v0.4 累积 ${current.valid.length + current.invalid.length} 项）`);
 if (failures.length) {
   for (const line of failures) console.error(`  ✗ ${line}`);
   process.exitCode = 1;

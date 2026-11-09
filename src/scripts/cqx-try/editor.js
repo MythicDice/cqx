@@ -212,7 +212,7 @@ function toDiagnostic(error, source, view) {
     from,
     to,
     severity: 'error',
-    source: 'CQX v0.3',
+    source: 'CQX v0.4',
     message: `${d.code} ${d.title}：${d.detail}`,
   };
   if (d.fix) {

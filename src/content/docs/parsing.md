@@ -34,6 +34,21 @@ description: "严格解析器的处理阶段、诊断代码、错误位置与资
 
 消息树构造 API 应提供相同的语义检查及可定位的节点路径。错误恢复与宽容模式可以作为额外功能；宽容模式输出需标示为恢复结果。
 
+## 动作元素解析
+
+v0.4 的 `poke` 与其他原子简写共享属性扫描和规范化规则，解析结果仅表示动作数据，执行交给宿主：
+
+| 输入 | 规范化结果 |
+| --- | --- |
+| `[poke 123]` | `[:poke id="123"/]` |
+| `[poke 123 variant=heart]` | `[:poke id="123" variant="heart"/]` |
+| `[:poke id="123"/]` | `[:poke id="123"/]` |
+| `[b][poke 123][/b]` | `[:b][:poke id="123"/][/b]` |
+| `[forward][msg name=Alice][poke 123][/msg][/forward]` | `[:forward][:msg name="Alice"][:poke id="123"/][/msg][/forward]` |
+| `[poke "123"]` | `[:poke id="123"/]` |
+| `[i][poke 123][/i]` | `[:i][:poke id="123"/][/i]` |
+| `[link https://a.test][poke 123][/link]` | `[:link href="https://a.test"][:poke id="123"/][/link]` |
+
 ## 错误示例
 
 | 输入 | 处理结果 |
@@ -53,6 +68,12 @@ description: "严格解析器的处理阶段、诊断代码、错误位置与资
 | `[forward]hello[/forward]` | `E_SCHEMA`，`forward` 直接包含非空白文本 |
 | `[ref 42]`（根级） | `E_PARENT` |
 | `[code#]未闭合` | `E_RAW_CLOSE` |
+| `[poke]` | `E_SCHEMA`，必需的 `id` 缺失 |
+| `[poke id=123 456]` | `E_ATTR_DUP`，命名属性与位置参数共同写入 `id` |
+| `[:poke/]` | `E_SCHEMA`，必需的 `id` 缺失 |
+| `[:poke id=""/]` | `E_SCHEMA`，必需的 `id` 为空 |
+| `[poke 123 variant=""]` | `E_SCHEMA`，`variant` 需要非空字符串 |
+| `[:poke id="123"][/poke]` | `E_SCHEMA`，`poke` 需要原子模式 |
 
 ## 资源预算
 

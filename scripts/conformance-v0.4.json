@@ -1,0 +1,275 @@
+{
+  "version": "0.4",
+  "valid": [
+    {
+      "input": "你好 [@123]",
+      "canonical": "你好 [:at id=\"123\"/]"
+    },
+    {
+      "input": "[@all]",
+      "canonical": "[:at type=\"all\"/]"
+    },
+    {
+      "input": "\\[@all]",
+      "canonical": "\\[@all]"
+    },
+    {
+      "input": "\\\\",
+      "canonical": "\\\\"
+    },
+    {
+      "input": "[note]",
+      "canonical": "\\[note]"
+    },
+    {
+      "input": "[/note]",
+      "canonical": "\\[/note]"
+    },
+    {
+      "input": "[img cat.png]",
+      "canonical": "[:img src=\"cat.png\"/]"
+    },
+    {
+      "input": "[img https://a.test/p/]",
+      "canonical": "[:img src=\"https://a.test/p/\"/]"
+    },
+    {
+      "input": "[img https://a.test/?x=1]",
+      "canonical": "[:img src=\"https://a.test/?x=1\"/]"
+    },
+    {
+      "input": "[img \"foo=bar\"]",
+      "canonical": "[:img src=\"foo=bar\"/]"
+    },
+    {
+      "input": "[reply 42]",
+      "canonical": "[:reply id=\"42\"/]"
+    },
+    {
+      "input": "[face 14 variant=super]",
+      "canonical": "[:face id=\"14\" variant=\"super\"/]"
+    },
+    {
+      "input": "[face 14 set=qq]",
+      "canonical": "[:face id=\"14\" set=\"qq\"/]"
+    },
+    {
+      "input": "[:face id=\"14\" set=\"qq\" variant=\"super\"/]",
+      "canonical": "[:face id=\"14\" set=\"qq\" variant=\"super\"/]"
+    },
+    {
+      "input": "[face 14 set=\"animal pack\"]",
+      "canonical": "[:face id=\"14\" set=\"animal pack\"/]"
+    },
+    {
+      "input": "[face 14 set=gesture]",
+      "canonical": "[:face id=\"14\" set=\"gesture\"/]"
+    },
+    {
+      "input": "[b]重点[/b]",
+      "canonical": "[:b]重点[/b]"
+    },
+    {
+      "input": "[:x/]",
+      "canonical": "[:x/]"
+    },
+    {
+      "input": "[:x][/x]",
+      "canonical": "[:x][/x]"
+    },
+    {
+      "input": "[raw][@all][/raw]",
+      "canonical": "\\[@all]"
+    },
+    {
+      "input": "[code][@all][/code]",
+      "canonical": "[:code]\\[@all][/code]"
+    },
+    {
+      "input": "[forward]\n  [msg name=Alice]你好[/msg]\n  [ref 42]\n[/forward]",
+      "canonical": "[:forward][:msg name=\"Alice\"]你好[/msg][:msg id=\"42\"/][/forward]"
+    },
+    {
+      "input": "[code#]文本含有 [/code] 标签[/code#]",
+      "canonical": "[:code]文本含有 \\[/code] 标签[/code]"
+    },
+    {
+      "input": "[raw#]这里还包含 [/raw] 字样[/raw#]",
+      "canonical": "这里还包含 \\[/raw] 字样"
+    },
+    {
+      "input": "[code##]这里有 [/code] 和 [/code#][/code##]",
+      "canonical": "[:code]这里有 \\[/code] 和 \\[/code#][/code]"
+    },
+    {
+      "input": "[code lang=python]print(1)[/code]",
+      "canonical": "[:code lang=\"python\"]print(1)[/code]"
+    },
+    {
+      "input": "前缀[raw][@all][/raw]后缀",
+      "canonical": "前缀\\[@all]后缀"
+    },
+    {
+      "input": "[:raw/]",
+      "canonical": "[:raw/]"
+    },
+    {
+      "input": "[:code]纯文本[/code]",
+      "canonical": "[:code]纯文本[/code]"
+    },
+    {
+      "input": "[forward][msg name=Alice]你好[/msg][/forward]",
+      "canonical": "[:forward][:msg name=\"Alice\"]你好[/msg][/forward]"
+    },
+    {
+      "input": "[/note] 与 [note]",
+      "canonical": "\\[/note] 与 \\[note]"
+    },
+    {
+      "input": "[:note]内容[/note]",
+      "canonical": "[:note]内容[/note]"
+    },
+    {
+      "input": "[code raw]print(\"[@all]\")[/code]",
+      "canonical": "[:code]print(\"\\[@all]\")[/code]"
+    },
+    {
+      "input": "[poke 123]",
+      "canonical": "[:poke id=\"123\"/]"
+    },
+    {
+      "input": "[poke 123 variant=heart]",
+      "canonical": "[:poke id=\"123\" variant=\"heart\"/]"
+    },
+    {
+      "input": "[:poke id=\"123\"/]",
+      "canonical": "[:poke id=\"123\"/]"
+    },
+    {
+      "input": "[b][poke 123][/b]",
+      "canonical": "[:b][:poke id=\"123\"/][/b]"
+    },
+    {
+      "input": "[forward][msg name=Alice][poke 123][/msg][/forward]",
+      "canonical": "[:forward][:msg name=\"Alice\"][:poke id=\"123\"/][/msg][/forward]"
+    },
+    {
+      "input": "[poke \"123\"]",
+      "canonical": "[:poke id=\"123\"/]"
+    },
+    {
+      "input": "[i][poke 123][/i]",
+      "canonical": "[:i][:poke id=\"123\"/][/i]"
+    },
+    {
+      "input": "[link https://a.test][poke 123][/link]",
+      "canonical": "[:link href=\"https://a.test\"][:poke id=\"123\"/][/link]"
+    }
+  ],
+  "invalid": [
+    {
+      "input": "[img]",
+      "code": "E_SCHEMA"
+    },
+    {
+      "input": "[img foo=bar]",
+      "code": "E_SCHEMA"
+    },
+    {
+      "input": "[:x a=1 a=2/]",
+      "code": "E_ATTR_DUP"
+    },
+    {
+      "input": "[b]文字[/i]",
+      "code": "E_CLOSE"
+    },
+    {
+      "input": "[:x]文字",
+      "code": "E_CLOSE"
+    },
+    {
+      "input": "[forward][/forward]",
+      "code": "E_SCHEMA"
+    },
+    {
+      "input": "[forward]hello[/forward]",
+      "code": "E_SCHEMA"
+    },
+    {
+      "input": "[ref 42]",
+      "code": "E_PARENT"
+    },
+    {
+      "input": "[msg name=Alice]你好[/msg]",
+      "code": "E_PARENT"
+    },
+    {
+      "input": "[code]未闭合",
+      "code": "E_RAW_CLOSE"
+    },
+    {
+      "input": "[:code][@all][/code]",
+      "code": "E_SCHEMA"
+    },
+    {
+      "input": "[:img src=\"\"/]",
+      "code": "E_SCHEMA"
+    },
+    {
+      "input": "[code#]含 [/code] 但没有匹配围栏",
+      "code": "E_RAW_CLOSE"
+    },
+    {
+      "input": "[raw#]未闭合",
+      "code": "E_RAW_CLOSE"
+    },
+    {
+      "input": "[raw x=1]内容[/raw]",
+      "code": "E_ATTR"
+    },
+    {
+      "input": "[:code][b]x[/b][/code]",
+      "code": "E_SCHEMA"
+    },
+    {
+      "input": "[code##]x[/code#]",
+      "code": "E_RAW_CLOSE"
+    },
+    {
+      "input": "[forward][msg]无属性[/msg][/forward]",
+      "code": "E_SCHEMA"
+    },
+    {
+      "input": "[:face id=\"14\" set=\"\"/]",
+      "code": "E_SCHEMA"
+    },
+    {
+      "input": "[:face id=\"14\" variant=\"\"/]",
+      "code": "E_SCHEMA"
+    },
+    {
+      "input": "[poke]",
+      "code": "E_SCHEMA"
+    },
+    {
+      "input": "[poke id=123 456]",
+      "code": "E_ATTR_DUP"
+    },
+    {
+      "input": "[:poke/]",
+      "code": "E_SCHEMA"
+    },
+    {
+      "input": "[:poke id=\"\"/]",
+      "code": "E_SCHEMA"
+    },
+    {
+      "input": "[poke 123 variant=\"\"]",
+      "code": "E_SCHEMA"
+    },
+    {
+      "input": "[:poke id=\"123\"][/poke]",
+      "code": "E_SCHEMA"
+    }
+  ]
+}

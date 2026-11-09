@@ -15,7 +15,7 @@ export default defineConfig({
   integrations: [
     starlight({
       title: 'CQX',
-      description: 'CQX v0.3 规定消息的字符串格式、消息元素、原样围栏、抽象消息树与严格解析规则。',
+      description: 'CQX v0.4 规定消息的字符串格式、消息元素、原样围栏、抽象消息树与严格解析规则。',
       // Starlight 会自动套用 base，这里写站点根下的路径。
       favicon: '/favicon.svg',
       customCss: ['/src/styles/custom.css'],

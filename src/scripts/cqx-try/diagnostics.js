@@ -29,7 +29,7 @@ const CATALOG = {
   E_NAME: {
     title: '元素名不被认识',
     summary: '这里要么缺少元素名，要么用了一个未登记的简写。',
-    rule: 'v0.3 的简写表是固定的：`at`、`img`、`face`、`reply`、`ref`、`b`、`i`、`code`、`link`、`msg`、`forward`、`file`、`audio`、`video`；`code` 与 `raw` 另有原样围栏写法。其他元素一律使用通用写法 `[:名称 属性=值/]`。元素名以字母开头，可含字母、数字、下划线、点与连字符。',
+    rule: 'v0.4 的简写表是固定的：`[@identifier]`、`img`、`face`、`reply`、`ref`、`poke`、`b`、`i`、`code`、`link`、`msg`、`forward`、`file`、`audio`、`video`；`code` 与 `raw` 另有原样围栏写法。其他元素一律使用通用写法 `[:名称 属性=值/]`。元素名以字母开头，可含字母、数字、下划线、点与连字符。',
     lesson: '固定简写表让「`[note]`」这类普通方括号文本可以原样保留，同时也让未知元素有唯一的写法。',
     suggestions: [
       '把未知简写改成 `[:名称 ...]` 通用写法',
@@ -99,7 +99,7 @@ const CATALOG = {
   E_SCHEMA: {
     title: '元素缺少必需属性或结构不对',
     summary: '元素本身合法，但它的属性或原子／容器形式不符合内置元素的规定。',
-    rule: '内置元素有固定的属性要求：`img`、`file`、`audio`、`video` 需要 `src`；`face`、`reply`、`ref` 需要 `id`；`link` 需要 `href`；`at` 需要非空 `id` 或 `type=all`；`face` 的 `set` 与 `variant` 写出时必须是非空字符串；容器 `forward` 至少包含一条 `msg`；容器 `msg` 需要 `user` 或 `name`；`code` 只能包含纯文本子节点；`msg` 的 `time` 必须是带时区的 RFC 3339 时间戳。',
+    rule: '内置元素有固定的属性要求：`img`、`file`、`audio`、`video` 需要 `src`；`face`、`reply`、`ref`、`poke` 需要 `id`；`link` 需要 `href`；`at` 需要非空 `id` 或 `type=all`；`face` 的 `set` 与 `variant`、`poke` 的 `variant` 写出时必须是非空字符串；`poke` 使用原子模式；容器 `forward` 至少包含一条 `msg`；容器 `msg` 需要 `user` 或 `name`；`code` 只能包含纯文本子节点；`msg` 的 `time` 必须是带时区的 RFC 3339 时间戳。',
     lesson: '解析器在生成消息树时会逐项检查这些约束，避免把残缺元素传递到后续环节。',
     suggestions: [
       '补上诊断信息里点名的必需属性',
@@ -155,7 +155,7 @@ const CATALOG = {
   E_UNKNOWN: {
     title: '解析未能完成',
     summary: '解析器抛出了一个未归类的错误。',
-    rule: 'CQX v0.3 沿用 v0.2 的诊断码：`E_TAG`、`E_NAME`、`E_ATTR`、`E_ATTR_DUP`、`E_CLOSE`、`E_SHORT_CLOSE`、`E_PARENT`、`E_SCHEMA`、`E_RAW_CLOSE`、`E_UNICODE`、`E_LIMIT`。',
+    rule: 'CQX v0.4 沿用 v0.2 的诊断码：`E_TAG`、`E_NAME`、`E_ATTR`、`E_ATTR_DUP`、`E_CLOSE`、`E_SHORT_CLOSE`、`E_PARENT`、`E_SCHEMA`、`E_RAW_CLOSE`、`E_UNICODE`、`E_LIMIT`。',
     lesson: '可以先对照原始诊断信息，或清空后从示例重新开始。',
     suggestions: ['清空编辑器，从一键填入示例重新开始'],
     example: null,
@@ -305,6 +305,7 @@ function refine(code, detail, error, source) {
         video: '[video "demo.mp4"]',
         face: '[face 14]',
         reply: '[reply 42]',
+        poke: '[poke 123]',
         link: '[link https://example.org/]首页[/link]',
       }[name];
       if (sample) out.example = { label: `带 ${attr} 的 ${name}`, code: sample };
@@ -321,7 +322,10 @@ function refine(code, detail, error, source) {
     if (detail.includes('at 必须')) {
       out.example = { label: '提及的两种写法', code: '[@123] 和 [@all]' };
     }
-    if (detail.includes('set 必须是非空') || detail.includes('variant 必须是非空')) {
+    if (detail.startsWith('poke')) {
+      out.example = { label: '戳一戳动作', code: '[poke 123 variant=heart]' };
+      out.suggestions.push('使用原子写法 `[poke 123]`，需要样式时填写非空 `variant`');
+    } else if (detail.includes('set 必须是非空') || detail.includes('variant 必须是非空')) {
       const attr = detail.includes('set 必须是非空') ? 'set' : 'variant';
       out.suggestions.push(`把 \`${attr}\` 写成非空字符串，例如 \`set=qq\` 或 \`variant=super\``);
       out.example = { label: '带表情集的表情', code: '[face 14 set=qq variant=super]' };

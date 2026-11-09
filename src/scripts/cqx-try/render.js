@@ -338,6 +338,12 @@ function renderElement(node, ctx) {
       return renderImage(node, ctx.stats);
     case 'face':
       return renderFace(node);
+    case 'poke': {
+      const variant = attrs.variant ? ` (${attrs.variant})` : '';
+      const chip = el('span', 'cqx-action', `戳一戳 #${attrs.id}${variant}`);
+      chip.title = '动作数据预览，由宿主执行';
+      return chip;
+    }
     case 'reply': {
       // 嵌套在样式容器里的回复仍按内联引用条显示；顶层回复由 splitQuotes 置顶。
       const box = el('div', 'cqx-reply');

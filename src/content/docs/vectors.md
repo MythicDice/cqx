@@ -24,6 +24,14 @@ description: "合法输入的规范化结果、非法输入的诊断代码、简
 | `[face 14 set=qq]` | `[:face id="14" set="qq"/]` |
 | `[:face id="14" set="qq" variant="super"/]` | `[:face id="14" set="qq" variant="super"/]` |
 | `[face 14 set="animal pack"]` | `[:face id="14" set="animal pack"/]` |
+| `[poke 123]` | `[:poke id="123"/]` |
+| `[poke 123 variant=heart]` | `[:poke id="123" variant="heart"/]` |
+| `[:poke id="123"/]` | `[:poke id="123"/]` |
+| `[b][poke 123][/b]` | `[:b][:poke id="123"/][/b]` |
+| `[forward][msg name=Alice][poke 123][/msg][/forward]` | `[:forward][:msg name="Alice"][:poke id="123"/][/msg][/forward]` |
+| `[poke "123"]` | `[:poke id="123"/]` |
+| `[i][poke 123][/i]` | `[:i][:poke id="123"/][/i]` |
+| `[link https://a.test][poke 123][/link]` | `[:link href="https://a.test"][:poke id="123"/][/link]` |
 | `[b]重要[/b]` | `[:b]重要[/b]` |
 | `[:x b=2 a=1/]` | `[:x a="1" b="2"/]` |
 | `[:x][/x]` | `[:x][/x]` |
@@ -88,6 +96,12 @@ description: "合法输入的规范化结果、非法输入的诊断代码、简
 | `[forward][msg]缺属性[/msg][/forward]` | `E_SCHEMA` |
 | `[:face id="14" set=""/]` | `E_SCHEMA` |
 | `[:face id="14" variant=""/]` | `E_SCHEMA` |
+| `[poke]` | `E_SCHEMA` |
+| `[poke id=123 456]` | `E_ATTR_DUP` |
+| `[:poke/]` | `E_SCHEMA` |
+| `[:poke id=""/]` | `E_SCHEMA` |
+| `[poke 123 variant=""]` | `E_SCHEMA` |
+| `[:poke id="123"][/poke]` | `E_SCHEMA` |
 
 ## 简化文法
 
@@ -114,7 +128,7 @@ Hashes          = { "#" } ;
 WS              = " " | "\t" | "\r" | "\n" ;
 ```
 
-`KnownVoid` 为 `img`、`audio`、`video`、`file`、`reply`、`face`、`ref`；`KnownBlock` 为 `b`、`i`、`link`、`forward`、`msg`。`code`、`raw` 由原样围栏处理。`ref` 展开为原子 `msg`，`@` 展开为原子 `at`。`RawBody` 是首次匹配结束围栏之前的全部原始字符。
+`KnownVoid` 为 `img`、`audio`、`video`、`file`、`reply`、`face`、`ref`、`poke`；`KnownBlock` 为 `b`、`i`、`link`、`forward`、`msg`。`code`、`raw` 由原样围栏处理。`ref` 展开为原子 `msg`，`@` 展开为原子 `at`。`RawBody` 是首次匹配结束围栏之前的全部原始字符。
 
 **扫描器的额外规则：**
 
@@ -139,3 +153,9 @@ WS              = " " | "\t" | "\r" | "\n" ;
 | `forward` 容器 | 合并转发节点数组 | 转发消息容器 |
 | `msg` 自定义消息 | 自定义 `node` | `message` + `author` |
 | `msg` 原子引用 | 引用 `node` | 已有消息引用 |
+
+### 戳一戳动作映射
+
+`poke` 是动作元素，可见消息内容为空。OneBot 11 系宿主应通过 `send_poke`、`group_poke`、`friend_poke` API 调用投递动作，按具体实现支持情况与当前会话类型选择接口。NapCat 与 LLOneBot 的戳一戳消息段投递可靠性有限，适配器应优先使用这些动作接口。
+
+QQ 官方接口的戳一戳能力缺失，宿主按自身规则将 `poke` 转为文本或丢弃。`variant` 仅在宿主支持对应样式时应用，其余情况忽略；解析器始终原样保留该字符串。

@@ -1,10 +1,10 @@
-/* CQX v0.3 浏览器端严格解析器
+/* CQX v0.4 浏览器端严格解析器
  * 以 v0.2 实现为基础增补修补：标签候选、固定简写表、属性与位置参数、
  * 原样围栏、引用展开、转发空白、AST 正规化、语义校验与诊断码。
  * v0.2 的诊断码、码点偏移、资源预算与 [code raw] 兼容写法全部保留。
  */
 
-export const VERSION = '0.3';
+export const VERSION = '0.4';
 
 const WS = ' \t\r\n';
 const NAME_RE = /^[A-Za-z][A-Za-z0-9_.-]*/;
@@ -17,7 +17,7 @@ const SHORT_START_RE = /\[([A-Za-z][A-Za-z0-9_.-]*)(?=[ \t\r\n/\]])/y;
 const FENCE_START_RE = /\[(code|raw)(#*)(?=[ \t\r\n\]])/y;
 // 已登记名称的结束标签必须报错；未知名称的 [/name] 按正文保留。
 const KNOWN_CLOSE = new Set([
-  'at', 'img', 'reply', 'face', 'audio', 'video', 'file', 'ref',
+  'at', 'img', 'reply', 'face', 'audio', 'video', 'file', 'ref', 'poke',
   'b', 'i', 'code', 'link', 'forward', 'msg', 'raw',
 ]);
 const RFC3339_RE =
@@ -33,16 +33,18 @@ export const POSITIONAL = {
   video: 'src',
   file: 'src',
   ref: 'id',
+  poke: 'id',
 };
-export const SHORT_ATOMIC = new Set(['img', 'reply', 'face', 'audio', 'video', 'file', 'ref']);
+export const SHORT_ATOMIC = new Set(['img', 'reply', 'face', 'audio', 'video', 'file', 'ref', 'poke']);
 export const SHORT_BLOCK = new Set(['b', 'i', 'code', 'link', 'msg', 'forward']);
 
-const BUILTIN_ATOMIC = new Set(['at', 'img', 'reply', 'face', 'audio', 'video', 'file']);
+const BUILTIN_ATOMIC = new Set(['at', 'img', 'reply', 'face', 'audio', 'video', 'file', 'poke']);
 const BUILTIN_BLOCK = new Set(['b', 'i', 'code', 'link']);
 const REQUIRED_ATTRIBUTE = {
   img: 'src',
   reply: 'id',
   face: 'id',
+  poke: 'id',
   audio: 'src',
   video: 'src',
   file: 'src',
@@ -139,6 +141,9 @@ function validateSemantics(node, parent) {
         return ['E_SCHEMA', `face 的 ${key} 必须是非空字符串`];
       }
     }
+  }
+  if (n === 'poke' && 'variant' in a && !a.variant) {
+    return ['E_SCHEMA', 'poke 的 variant 必须是非空字符串'];
   }
   if (n === 'code' && node.mode === 'block' &&
       node.children.some((child) => child.type !== 'text')) {
@@ -613,7 +618,7 @@ class Parser {
   }
 }
 
-/** 解析 CQX v0.3 文本，返回正规化后的消息树。 */
+/** 解析 CQX v0.4 文本，返回正规化后的消息树。 */
 export function parse(source, options = {}) {
   const { maxDepth = 64, maxNodes = 10000, maxChars = 1000000 } = options;
   if (typeof source !== 'string') throw new TypeError('CQX 输入必须是字符串');

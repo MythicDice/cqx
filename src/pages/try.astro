@@ -23,7 +23,7 @@ const base = import.meta.env.BASE_URL;
         <span class="brand-page">在线尝试</span>
       </div>
       <div class="topbar-right">
-        <span class="topbar-version">v0.3 草案</span>
+        <span class="topbar-version">v0.4 草案</span>
         <a class="back-link" href={base}>返回文档 →</a>
       </div>
     </header>
@@ -450,6 +450,19 @@ const base = import.meta.env.BASE_URL;
         border: 1px solid var(--line);
         border-radius: 3px;
         padding: 1px 5px;
+      }
+
+      .cqx-action {
+        display: inline-block;
+        max-width: 100%;
+        padding: 1px 6px;
+        border: 1px solid var(--line);
+        border-radius: 4px;
+        color: var(--text-2);
+        font-size: 12px;
+        line-height: 1.5;
+        vertical-align: baseline;
+        overflow-wrap: anywhere;
       }
 
       .cqx-media-fallback {

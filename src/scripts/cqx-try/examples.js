@@ -1,6 +1,6 @@
 import { SAMPLE_PNG_DATA_URL } from './sample-image.js';
 
-/* 10 个递进示例。正文只写消息本身，不写讲解、不写规则说明。
+/* 11 个递进示例。正文专注消息本身。
  * 每个示例都必须能被严格解析器接受，且规范化文本可无损往返。
  */
 export const EXAMPLES = [
@@ -22,6 +22,12 @@ C:\\Users\\Alice
 [face 14] [face 14 set=qq] [face 14 set=animal] [face 14 set=gesture]
 [face 14 set=qq variant=super]
 [:at id="10002"/]`,
+  },
+  {
+    label: '戳一戳动作',
+    code: `[poke 10001]
+[poke 10002 variant=heart]
+[:poke id="10003"/]`,
   },
   {
     label: '文本样式与链接',
@@ -88,7 +94,7 @@ print("[img cat.png]")
   [:acme.option id="a" label="披萨"/]
   [:acme.option id="b" label="寿司"/]
 [/acme.poll]
-[:acme.badge text="v0.3"/]
+[:acme.badge text="v0.4"/]
 [:vendor.card title="自定义卡片"]内容[/vendor.card]
 [:x b=2 a=1/]`,
   },
