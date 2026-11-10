@@ -10,7 +10,6 @@ const WS = ' \t\r\n';
 const NAME_RE = /^[A-Za-z][A-Za-z0-9_.-]*/;
 const KEY_RE = /^[A-Za-z_][A-Za-z0-9_.-]*/;
 const KEY_FULL_RE = /^[A-Za-z_][A-Za-z0-9_.-]*$/;
-const AT_RE = /\[@([A-Za-z0-9_.-]+)\]/y;
 const CLOSE_RE = /\[\/([A-Za-z][A-Za-z0-9_.-]*)\]/y;
 const SHORT_START_RE = /\[([A-Za-z][A-Za-z0-9_.-]*)(?=[ \t\r\n/\]])/y;
 // 原样围栏：[code]、[code#]、[code## lang=python]、[raw]、[raw#]。
@@ -25,6 +24,7 @@ const RFC3339_RE =
 
 /** 冻结的简写表：位置参数对应属性。 */
 export const POSITIONAL = {
+  at: 'id',
   link: 'href',
   img: 'src',
   reply: 'id',
@@ -35,7 +35,7 @@ export const POSITIONAL = {
   ref: 'id',
   poke: 'id',
 };
-export const SHORT_ATOMIC = new Set(['img', 'reply', 'face', 'audio', 'video', 'file', 'ref', 'poke']);
+export const SHORT_ATOMIC = new Set(['at', 'img', 'reply', 'face', 'audio', 'video', 'file', 'ref', 'poke']);
 export const SHORT_BLOCK = new Set(['b', 'i', 'code', 'link', 'msg', 'forward']);
 
 const BUILTIN_ATOMIC = new Set(['at', 'img', 'reply', 'face', 'audio', 'video', 'file', 'poke']);
@@ -447,13 +447,7 @@ class Parser {
   tag() {
     const start = this.i;
     const s = this.s;
-    let m = this.match(AT_RE);
-    if (m) {
-      const word = m[1];
-      const attrs = word === 'all' ? { type: 'all' } : { id: word };
-      return { kind: 'void', name: 'at', attrs, start, end: this.i + m[0].length };
-    }
-    m = this.match(CLOSE_RE);
+    let m = this.match(CLOSE_RE);
     if (m) {
       // 未知名称的 [/name] 不是结束标签，按普通正文保存。
       if (!KNOWN_CLOSE.has(m[1]) && !this.openStack.includes(m[1])) return null;
@@ -519,6 +513,10 @@ class Parser {
       this.error('E_NAME', `未登记的简写 ${name}`, start);
     }
     const attrs = this.attributes(rest, POSITIONAL[name] ?? null, start);
+    if (name === 'at' && attrs.id === 'all' && !('type' in attrs)) {
+      delete attrs.id;
+      attrs.type = 'all';
+    }
     const actual = name === 'ref' ? 'msg' : name;
     return {
       kind: SHORT_ATOMIC.has(name) ? 'void' : 'open',

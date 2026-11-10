@@ -35,7 +35,7 @@ description: "Text 与 Element 节点、AST 正规化、等价关系与唯一规
 例如，以下消息：
 
 ```text
-你好 [@123]！
+你好 [at 123]！
 ```
 
 解析得到：
@@ -78,7 +78,7 @@ description: "Text 与 Element 节点、AST 正规化、等价关系与唯一规
 输入：
 
 ```text
-你好 [@00123]！[img https://example.org/a/?x=1]
+你好 [at 00123]！[img https://example.org/a/?x=1]
 ```
 
 规范化输出：
@@ -121,7 +121,7 @@ serializeCanonical(parse(serializeCanonical(T))) == serializeCanonical(T)
 | `encodeAttr(value)` | 输出 JSON 双引号字符串 |
 
 ```text
-escapeText('这里的 [@all] 只是文字')  →  这里的 \[@all] 只是文字
+escapeText('这里的 [at all] 只是文字')  →  这里的 \[at all] 只是文字
 encodeAttr('Alice 的"照片".png')      →  "Alice 的\"照片\".png"
 ```
 

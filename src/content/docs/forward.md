@@ -9,7 +9,7 @@ description: "forward 容器、自定义 msg 节点、ref 引用、原子转发�
 
 ```text
 [forward]
-  [msg user=10001 name=Alice]你好！[/msg]
+  [msg user=10001 name=Alice]你好，[at 10002]！[/msg]
   [msg user=10002 name=Bob]看看这个：[img cat.png][/msg]
   [ref 987654]
 [/forward]

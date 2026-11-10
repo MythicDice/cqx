@@ -8,7 +8,7 @@ import { checkSource } from './check.js';
 import { describeError } from './diagnostics.js';
 
 const TAG_START =
-  /^\[(?:@[A-Za-z0-9_.-]+\]|\/[:A-Za-z_][A-Za-z0-9_.-]*#*\]|:[A-Za-z][A-Za-z0-9_.-]*|[A-Za-z][A-Za-z0-9_.-]*#*(?=[\s/\]]))/;
+  /^\[(?:\/[:A-Za-z_][A-Za-z0-9_.-]*#*\]|:[A-Za-z][A-Za-z0-9_.-]*|[A-Za-z][A-Za-z0-9_.-]*#*(?=[\s/\]]))/;
 
 const cqxLanguage = StreamLanguage.define({
   startState() {

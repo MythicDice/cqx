@@ -18,7 +18,7 @@ CQX 使用一段可手写的 Unicode 文本表达普通文字、富消息元素�
 普通消息：
 
 ```cqx
-你好，[@123456]！
+你好，[at 123456]！
 [reply 42]看这张图片：[img cat.png]
 [face 14] [face 14 variant=super]
 [poke 123456]
@@ -54,8 +54,8 @@ CQX 文档由连续的**纯文本**和**元素**构成。元素不需要使用�
 原子元素没有子内容。内置简写以 `]` 结束：
 
 ```cqx
-[@123]
-[@all]
+[at 123]
+[at all]
 [img cat.png]
 [reply 42]
 [face 14]
@@ -116,11 +116,13 @@ v0.4 的简写表在本语法版本内固定，新增简写需要新的语法版
 
 | 类别 | 名称 |
 |---|---|
-| 原子 | `[@identifier]`、`img`、`reply`、`face`、`audio`、`video`、`file`、`ref`、`poke` |
+| 原子 | `at`、`img`、`reply`、`face`、`audio`、`video`、`file`、`ref`、`poke` |
 | 容器 | `b`、`i`、`link`、`forward`、`msg` |
 | 原样围栏 | `[code#*]...[/code#*]`、`[raw#*]...[/raw#*]` |
 
 `[poke]` 属于已登记标签候选，必需的 `id` 属性缺失时报告 `E_SCHEMA`；`[poker]` 继续作为普通文本保存。
+
+`at` 与 `img`、`reply` 一样按普通短标签读取属性和位置参数。`[@123]` 属于普通正文，其规范化输出是 `\[@123]`。
 
 ## 3. 文本、属性与转义
 
@@ -138,8 +140,8 @@ v0.4 的简写表在本语法版本内固定，新增简写需要新的语法版
 其他反斜杠序列按原样保存；没有任何针对 Windows 路径、正则表达式或 LaTeX 的特殊规则。
 
 ```cqx
-真正的提及：[@123]
-字面提及：\[@123]
+真正的提及：[at 123]
+字面提及：\[at 123]
 字面反斜杠：\\
 普通路径文字：C:\Users\Alice
 ```
@@ -174,7 +176,7 @@ v0.4 的简写表在本语法版本内固定，新增简写需要新的语法版
 | 短标签 | 位置参数写入的属性 |
 |---|---|
 | `img`、`audio`、`video`、`file` | `src` |
-| `reply`、`face`、`ref`、`poke` | `id` |
+| `at`、`reply`、`face`、`ref`、`poke` | `id` |
 | `link` | `href` |
 
 示例：
@@ -196,6 +198,8 @@ v0.4 的简写表在本语法版本内固定，新增简写需要新的语法版
 
 因此 `[img foo=bar]` 会被解析为具有 `foo` 属性、却缺少 `src` 的 `img`，并报告错误。通用标签只允许命名属性。位置参数和同名的命名属性不能同时出现。
 
+`[at 123]` 与 `[at "123"]` 均写入字符串 `id="123"`。`at` 简写中的 `id="all"` 展开为 `type="all"`，表示全体成员；ID 字面值 `all` 使用通用形式 `[:at id="all"/]`。位置参数与命名属性共同写入 `id` 的 `[at 123 id=4]` 报告 `E_ATTR_DUP`。
+
 ### 3.4 结构空白
 
 标签中的分隔空白仅包括 `SP`（U+0020）、`TAB`（U+0009）、`LF`（U+000A）、`CR`（U+000D）。其他 Unicode 空白不作为标签或属性分隔符。正文空白默认精确保留；`forward` 直接子节点之间的排版空白遵守第 5 节规则。
@@ -206,7 +210,7 @@ v0.4 的简写表在本语法版本内固定，新增简写需要新的语法版
 
 | 名称 | 常见写法 | 必需属性 | 可选标准属性 | 含义 |
 |---|---|---|---|---|
-| `at` | `[@123]`、`[@all]` | `id` 或 `type="all"` | — | 提及用户或全体 |
+| `at` | `[at 123]`、`[at all]` | `id` 或 `type="all"` | — | 提及用户或全体 |
 | `img` | `[img cat.png]` | `src` | `alt` | 图片 |
 | `audio` | `[audio a.ogg]` | `src` | — | 音频 |
 | `video` | `[video a.mp4]` | `src` | — | 视频 |
@@ -215,7 +219,7 @@ v0.4 的简写表在本语法版本内固定，新增简写需要新的语法版
 | `face` | `[face 14]` | `id` | `set`、`variant` | 平台原生表情 |
 | `poke` | `[poke 123456]` | `id` | `variant` | 请求在当前会话中戳一戳用户 |
 
-`at` 必须恰好包含非空 `id` 或 `type="all"`。提及 ID 字面值 `all` 的用户时，写 `[:at id="all"/]`。
+`at` 必须恰好包含非空 `id` 或 `type="all"`。`[at all]` 专指全体成员；提及 ID 字面值 `all` 的用户时，写 `[:at id="all"/]`。
 
 `face` 通过当前平台的表情集解释。`variant` 用于特殊表情形式，例如超级表情；`set` 可显式指定表情集。普通 Unicode emoji 直接写入正文：
 
@@ -309,7 +313,7 @@ v0.4 的简写表在本语法版本内固定，新增简写需要新的语法版
 
 ```cqx
 [code]
-print("[@all]")
+print("[at all]")
 print("[img cat.png]")
 [/code]
 ```
@@ -341,7 +345,7 @@ print("[/code]")
 `raw` 使用同一围栏语法，但只生成 Text，不增加代码样式：
 
 ```cqx
-[raw]这里的 [@all] 是普通文字[/raw]
+[raw]这里的 [at all] 是普通文字[/raw]
 [raw#]这里还包含 [/raw] 字样[/raw#]
 ```
 
@@ -350,13 +354,13 @@ print("[/code]")
 规范化序列化不会输出围栏：`raw` 变成普通转义正文，`code` 变成通用容器 `[:code]...[/code]`。例如：
 
 ```cqx
-[code]print("[@all]")[/code]
+[code]print("[at all]")[/code]
 ```
 
 规范化为：
 
 ```cqx
-[:code]print("\[@all]")[/code]
+[:code]print("\[at all]")[/code]
 ```
 
 ## 7. AST 与规范化序列化
@@ -405,7 +409,7 @@ print("[/code]")
 
 ```cqx
 [forward]
-  [msg name=Alice]你好 [@2][/msg]
+  [msg name=Alice]你好 [at 2][/msg]
   [ref 42]
 [/forward]
 ```
@@ -432,10 +436,9 @@ parseCQX(serializeCanonical(T)) == normalizeAST(T)
 
 1. `\[`、`\\` 两种正文转义。
 2. 当前容器合法的关闭标签 `[/name]`。
-3. 提及简写 `[@identifier]`（`identifier` 符合 `[A-Za-z0-9_.-]+`）。
-4. 通用标签 `[:name .../]`、`[:name ...]`。
-5. 已登记的短元素标签和专用原样围栏。
-6. 其他输入作为 Text。
+3. 通用标签 `[:name .../]`、`[:name ...]`。
+4. 已登记的短元素标签和专用原样围栏。
+5. 其他输入作为 Text。
 
 短元素名称后必须紧跟 `]` 或结构空白。原样围栏允许在名称后紧接一个或多个 `#`，再接 `]` 或结构空白。未知 `[note]`、`[/note]` 可以作为普通文字出现。
 
@@ -467,9 +470,14 @@ OneBot 11 系宿主通过 `send_poke`、`group_poke`、`friend_poke` API 调用�
 
 | 输入 | 规范化结果 |
 |---|---|
-| `你好 [@123]` | `你好 [:at id="123"/]` |
-| `[@all]` | `[:at type="all"/]` |
-| `\[@all]` | `\[@all]` |
+| `你好 [at 123]` | `你好 [:at id="123"/]` |
+| `[at all]` | `[:at type="all"/]` |
+| `[at 123]` | `[:at id="123"/]` |
+| `[:at id="all"/]` | `[:at id="all"/]` |
+| `[at "123"]` | `[:at id="123"/]` |
+| `[@123]` | `\[@123]` |
+| `[at "user id"]` | `[:at id="user id"/]` |
+| `\[at all]` | `\[at all]` |
 | `\\` | `\\` |
 | `[note]` | `\[note]` |
 | `[/note]` | `\[/note]` |
@@ -490,8 +498,8 @@ OneBot 11 系宿主通过 `send_poke`、`group_poke`、`friend_poke` API 调用�
 | `[b]重点[/b]` | `[:b]重点[/b]` |
 | `[:x/]` | `[:x/]` |
 | `[:x][/x]` | `[:x][/x]` |
-| `[raw][@all][/raw]` | `\[@all]` |
-| `[code][@all][/code]` | `[:code]\[@all][/code]` |
+| `[raw][at all][/raw]` | `\[at all]` |
+| `[code][at all][/code]` | `[:code]\[at all][/code]` |
 
 **合并转发：**
 
@@ -534,8 +542,16 @@ OneBot 11 系宿主通过 `send_poke`、`group_poke`、`friend_poke` API 调用�
 | `[ref 42]` | 引用节点位于转发外部 |
 | `[msg name=Alice]你好[/msg]` | 消息节点位于转发外部 |
 | `[code]未闭合` | 原样围栏未闭合 |
-| `[:code][@all][/code]` | `code` 含有非 Text 子节点 |
+| `[:code][at all][/code]` | `code` 含有非 Text 子节点 |
 | `[:img src=""/]` | 必需属性为空 |
+
+提及元素的错误诊断：
+
+| 输入 | 诊断码 |
+|---|---|
+| `[at]` | `E_SCHEMA` |
+| `[at 123 id=4]` | `E_ATTR_DUP` |
+| `[at all id=4]` | `E_ATTR_DUP` |
 
 动作元素的错误诊断：
 
@@ -558,12 +574,11 @@ OneBot 11 系宿主通过 `send_poke`、`group_poke`、`friend_poke` API 调用�
 
 ```ebnf
 Document       = { Text | Element | RawInput } ;
-Element        = GenericVoid | GenericBlock | ShortVoid | ShortBlock | Mention ;
+Element        = GenericVoid | GenericBlock | ShortVoid | ShortBlock ;
 GenericVoid    = "[:", Name, Attributes, "/]" ;
 GenericBlock   = "[:", Name, Attributes, "]", Document, "[/", Name, "]" ;
 ShortVoid      = "[", KnownVoid, ShortAttributes, "]" ;
 ShortBlock     = "[", KnownBlock, ShortAttributes, "]", Document, "[/", KnownBlock, "]" ;
-Mention        = "[@", Identifier, "]" ;
 RawInput       = CodeFence | RawFence ;
 CodeFence      = "[code", Hashes, Attributes, "]", RawBody, "[/code", Hashes, "]" ;
 RawFence       = "[raw", Hashes, "]", RawBody, "[/raw", Hashes, "]" ;
@@ -575,7 +590,7 @@ Hashes         = { "#" } ;
 WS             = " " | "\t" | "\r" | "\n" ;
 ```
 
-`KnownVoid` 为 `img`、`audio`、`video`、`file`、`reply`、`face`、`ref`、`poke`；`KnownBlock` 为 `b`、`i`、`link`、`forward`、`msg`。`code`、`raw` 由原样围栏处理。`ref` 展开为原子 `msg`，`@` 展开为原子 `at`。`JSONString` 使用 JSON 字符串规则。`RawBody` 表示首次匹配结束围栏之前的全部原始字符。
+`KnownVoid` 为 `at`、`img`、`audio`、`video`、`file`、`reply`、`face`、`ref`、`poke`；`KnownBlock` 为 `b`、`i`、`link`、`forward`、`msg`。`code`、`raw` 由原样围栏处理。`ref` 展开为原子 `msg`，`at` 简写中的 `id="all"` 展开为 `type="all"`。`JSONString` 使用 JSON 字符串规则。`RawBody` 表示首次匹配结束围栏之前的全部原始字符。
 
 ## 附录 B：设计取舍
 

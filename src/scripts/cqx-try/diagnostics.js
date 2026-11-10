@@ -29,7 +29,7 @@ const CATALOG = {
   E_NAME: {
     title: '元素名不被认识',
     summary: '这里要么缺少元素名，要么用了一个未登记的简写。',
-    rule: 'v0.4 的简写表是固定的：`[@identifier]`、`img`、`face`、`reply`、`ref`、`poke`、`b`、`i`、`code`、`link`、`msg`、`forward`、`file`、`audio`、`video`；`code` 与 `raw` 另有原样围栏写法。其他元素一律使用通用写法 `[:名称 属性=值/]`。元素名以字母开头，可含字母、数字、下划线、点与连字符。',
+    rule: 'v0.4 的简写表是固定的：`at`、`img`、`face`、`reply`、`ref`、`poke`、`b`、`i`、`code`、`link`、`msg`、`forward`、`file`、`audio`、`video`；`code` 与 `raw` 另有原样围栏写法。其他元素一律使用通用写法 `[:名称 属性=值/]`。元素名以字母开头，可含字母、数字、下划线、点与连字符。',
     lesson: '固定简写表让「`[note]`」这类普通方括号文本可以原样保留，同时也让未知元素有唯一的写法。',
     suggestions: [
       '把未知简写改成 `[:名称 ...]` 通用写法',
@@ -99,7 +99,7 @@ const CATALOG = {
   E_SCHEMA: {
     title: '元素缺少必需属性或结构不对',
     summary: '元素本身合法，但它的属性或原子／容器形式不符合内置元素的规定。',
-    rule: '内置元素有固定的属性要求：`img`、`file`、`audio`、`video` 需要 `src`；`face`、`reply`、`ref`、`poke` 需要 `id`；`link` 需要 `href`；`at` 需要非空 `id` 或 `type=all`；`face` 的 `set` 与 `variant`、`poke` 的 `variant` 写出时必须是非空字符串；`poke` 使用原子模式；容器 `forward` 至少包含一条 `msg`；容器 `msg` 需要 `user` 或 `name`；`code` 只能包含纯文本子节点；`msg` 的 `time` 必须是带时区的 RFC 3339 时间戳。',
+    rule: '内置元素有固定的属性要求：`img`、`file`、`audio`、`video` 需要 `src`；`face`、`reply`、`ref`、`poke` 需要 `id`；`link` 需要 `href`；`at` 需要非空 `id` 或 `type=all`，简写 `[at all]` 表示全体成员，ID 字面值 all 使用 `[:at id="all"/]`；`face` 的 `set` 与 `variant`、`poke` 的 `variant` 写出时必须是非空字符串；`poke` 使用原子模式；容器 `forward` 至少包含一条 `msg`；容器 `msg` 需要 `user` 或 `name`；`code` 只能包含纯文本子节点；`msg` 的 `time` 必须是带时区的 RFC 3339 时间戳。',
     lesson: '解析器在生成消息树时会逐项检查这些约束，避免把残缺元素传递到后续环节。',
     suggestions: [
       '补上诊断信息里点名的必需属性',
@@ -111,13 +111,13 @@ const CATALOG = {
   E_RAW_CLOSE: {
     title: '原样围栏没有结束标记',
     summary: '`[code]` 或 `[raw]` 之后一直没有遇到完全匹配的结束围栏。',
-    rule: '`[code#]…[/code#]` 之间的内容按字面读取，内部的 `[@…]`、`[img …]` 都不会被解析。结束围栏的名称与 `#` 数量必须和开始围栏完全一致；正文里出现 `[/code]` 时，把开始与结束围栏都加一个 `#`。',
+    rule: '`[code#]…[/code#]` 之间的内容按字面读取，内部的 `[at …]`、`[img …]` 完整保留为正文。结束围栏的名称与 `#` 数量必须和开始围栏完全一致；正文里出现 `[/code]` 时，把开始与结束围栏都加一个 `#`。',
     lesson: '结束围栏不受反斜杠影响，加长 `#` 数量即可避开正文里的字面标记。v0.2 的 `[code raw]` 仍可用，它用 `\\[/code]` 表示字面关闭标记。',
     suggestions: [
       '补上与开始围栏完全一致的结束围栏',
       '正文含字面 `[/code]` 时，把围栏写成 `[code#]…[/code#]`',
     ],
-    example: { label: '完整的原样围栏', code: '[code]print("[@all]")[/code]' },
+    example: { label: '完整的原样围栏', code: '[code]print("[at all]")[/code]' },
   },
   E_UNICODE: {
     title: '文本里有不完整的字符',
@@ -320,7 +320,8 @@ function refine(code, detail, error, source) {
       out.example = { label: '至少一条消息', code: '[forward][msg user=1]你好[/msg][/forward]' };
     }
     if (detail.includes('at 必须')) {
-      out.example = { label: '提及的两种写法', code: '[@123] 和 [@all]' };
+      out.example = { label: '用户、全体与字面 ID', code: '[at 123] [at all] [:at id="all"/]' };
+      out.suggestions.push('给 `at` 填写用户 ID 或 `all`，例如 `[at 123]`、`[at all]`');
     }
     if (detail.startsWith('poke')) {
       out.example = { label: '戳一戳动作', code: '[poke 123 variant=heart]' };

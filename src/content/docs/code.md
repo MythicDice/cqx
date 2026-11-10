@@ -9,7 +9,7 @@ description: "code 与 raw 的字面读取规则、可变结束围栏、正文�
 
 ```text
 [code]
-print("[@all]")
+print("[at all]")
 print("[img cat.png]")
 [/code]
 ```
@@ -19,10 +19,10 @@ print("[img cat.png]")
 `raw` 使用同一套围栏，只生成正文，不产生元素节点：
 
 ```text
-[raw]这里的 [@all] 是普通文字[/raw]
+[raw]这里的 [at all] 是普通文字[/raw]
 ```
 
-上例的正文为 `这里的 [@all] 是普通文字`。`raw` 是输入语法，不出现在消息树里。
+上例的正文为 `这里的 [at all] 是普通文字`。`raw` 是输入语法，解析后的消息树仅保留正文。
 
 ## 结束围栏
 
@@ -54,10 +54,10 @@ print("[/code]")
 
 ```text
 [:code]x = 1[/code]
-[:code]\[@all][/code]
+[:code]\[at all][/code]
 ```
 
-含元素子节点的 `[:code][@all][/code]` 报 `E_SCHEMA`。
+含元素子节点的 `[:code][at all][/code]` 报 `E_SCHEMA`。
 
 ## 展开结果
 
@@ -66,16 +66,16 @@ print("[/code]")
 输入：
 
 ```text
-[code]print("[@all]")[/code]
+[code]print("[at all]")[/code]
 ```
 
 规范化结果：
 
 ```text
-[:code]print("\[@all]")[/code]
+[:code]print("\[at all]")[/code]
 ```
 
-`[raw][@all][/raw]` 的规范化结果为 `\[@all]`。
+`[raw][at all][/raw]` 的规范化结果为 `\[at all]`。
 
 ## 兼容写法
 
@@ -92,5 +92,5 @@ v0.2 的 `[code raw]…[/code]` 继续可用。它的正文同样按字面读取
 | `[code]未闭合` | `E_RAW_CLOSE` |
 | `[code#]含 [/code] 但没有匹配围栏` | `E_RAW_CLOSE` |
 | `[raw x=1]内容[/raw]` | `E_ATTR` |
-| `[:code][@all][/code]` | `E_SCHEMA` |
+| `[:code][at all][/code]` | `E_SCHEMA` |
 | `[code raw]未关闭` | `E_RAW_CLOSE` |

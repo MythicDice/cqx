@@ -10,11 +10,16 @@ description: "合法输入的规范化结果、非法输入的诊断代码、简
 | 输入 | 规范化结果 |
 | --- | --- |
 | `普通文本` | `普通文本` |
-| `\[@all]` | `\[:at type="all"/]` |
+| `\[at all]` | `\[at all]` |
 | `C:\Users\Alice` | `C:\\Users\\Alice` |
-| `你好 [@123]！` | `你好 [:at id="123"/]！` |
-| `[@all]` | `[:at type="all"/]` |
-| `[@000123]` | `[:at id="000123"/]` |
+| `你好 [at 123]！` | `你好 [:at id="123"/]！` |
+| `[at all]` | `[:at type="all"/]` |
+| `[at 000123]` | `[:at id="000123"/]` |
+| `[at 123]` | `[:at id="123"/]` |
+| `[:at id="all"/]` | `[:at id="all"/]` |
+| `[at "123"]` | `[:at id="123"/]` |
+| `[@123]` | `\[@123]` |
+| `[at "user id"]` | `[:at id="user id"/]` |
 | `[img cat.png]` | `[:img src="cat.png"/]` |
 | `[img https://a.test/p/]` | `[:img src="https://a.test/p/"/]` |
 | `[img "foo=bar"]` | `[:img src="foo=bar"/]` |
@@ -36,17 +41,17 @@ description: "合法输入的规范化结果、非法输入的诊断代码、简
 | `[:x b=2 a=1/]` | `[:x a="1" b="2"/]` |
 | `[:x][/x]` | `[:x][/x]` |
 | `[:forward id="f123"/]` | `[:forward id="f123"/]` |
-| `[code raw]print("[@all]")[/code]` | `[:code]print("\[@all]")[/code]` |
+| `[code raw]print("[at all]")[/code]` | `[:code]print("\[at all]")[/code]` |
 | `[forward][msg user=1 name=Alice]你好[/msg][ref 42][/forward]` | `[:forward][:msg name="Alice" user="1"]你好[/msg][:msg id="42"/][/forward]` |
 | `[note]` | `\[note]` |
 | `[/note]` | `\[/note]` |
-| `[raw][@all][/raw]` | `\[@all]` |
-| `[code][@all][/code]` | `[:code]\[@all][/code]` |
+| `[raw][at all][/raw]` | `\[at all]` |
+| `[code][at all][/code]` | `[:code]\[at all][/code]` |
 | `[code#]文本含有 [/code] 标签[/code#]` | `[:code]文本含有 \[/code] 标签[/code]` |
 | `[raw#]这里还包含 [/raw] 字样[/raw#]` | `这里还包含 \[/raw] 字样` |
 | `[code##]这里有 [/code] 和 [/code#][/code##]` | `[:code]这里有 \[/code] 和 \[/code#][/code]` |
 | `[code lang=python]print(1)[/code]` | `[:code lang="python"]print(1)[/code]` |
-| `前缀[raw][@all][/raw]后缀` | `前缀\[@all]后缀` |
+| `前缀[raw][at all][/raw]后缀` | `前缀\[at all]后缀` |
 | `[:raw/]` | `[:raw/]` |
 | `[:code]纯文本[/code]` | `[:code]纯文本[/code]` |
 | `[forward][msg name=Alice]你好[/msg][/forward]` | `[:forward][:msg name="Alice"]你好[/msg][/forward]` |
@@ -74,6 +79,9 @@ description: "合法输入的规范化结果、非法输入的诊断代码、简
 
 | 输入 | 诊断码 |
 | --- | --- |
+| `[at]` | `E_SCHEMA` |
+| `[at 123 id=4]` | `E_ATTR_DUP` |
+| `[at all id=4]` | `E_ATTR_DUP` |
 | `[img]` | `E_SCHEMA` |
 | `[img foo=bar]` | `E_SCHEMA` |
 | `[:x a=1 a=2/]` | `E_ATTR_DUP` |
@@ -91,7 +99,7 @@ description: "合法输入的规范化结果、非法输入的诊断代码、简
 | `[code#]含 [/code] 但没有匹配围栏` | `E_RAW_CLOSE` |
 | `[code##]x[/code#]` | `E_RAW_CLOSE` |
 | `[raw x=1]内容[/raw]` | `E_ATTR` |
-| `[:code][@all][/code]` | `E_SCHEMA` |
+| `[:code][at all][/code]` | `E_SCHEMA` |
 | `[msg name=Alice]你好[/msg]` | `E_PARENT` |
 | `[forward][msg]缺属性[/msg][/forward]` | `E_SCHEMA` |
 | `[:face id="14" set=""/]` | `E_SCHEMA` |
@@ -109,13 +117,12 @@ description: "合法输入的规范化结果、非法输入的诊断代码、简
 
 ```text
 Document        = { Text | Element | RawInput } ;
-Element         = GenericVoid | GenericBlock | ShortVoid | ShortBlock | Mention ;
+Element         = GenericVoid | GenericBlock | ShortVoid | ShortBlock ;
 GenericVoid     = "[:", Name, Attributes, "/]" ;
 GenericBlock    = "[:", Name, Attributes, "]", Document, "[/", Name, "]" ;
 ShortVoid       = "[", KnownVoid, ShortAttributes, "]" ;
 ShortBlock      = "[", KnownBlock, ShortAttributes, "]", Document,
                   "[/", KnownBlock, "]" ;
-Mention         = "[@", Identifier, "]" ;
 RawInput        = CodeFence | RawFence ;
 CodeFence       = "[code", Hashes, Attributes, "]", RawBody,
                   "[/code", Hashes, "]" ;
@@ -128,7 +135,7 @@ Hashes          = { "#" } ;
 WS              = " " | "\t" | "\r" | "\n" ;
 ```
 
-`KnownVoid` 为 `img`、`audio`、`video`、`file`、`reply`、`face`、`ref`、`poke`；`KnownBlock` 为 `b`、`i`、`link`、`forward`、`msg`。`code`、`raw` 由原样围栏处理。`ref` 展开为原子 `msg`，`@` 展开为原子 `at`。`RawBody` 是首次匹配结束围栏之前的全部原始字符。
+`KnownVoid` 为 `at`、`img`、`audio`、`video`、`file`、`reply`、`face`、`ref`、`poke`；`KnownBlock` 为 `b`、`i`、`link`、`forward`、`msg`。`code`、`raw` 由原样围栏处理。`ref` 展开为原子 `msg`，`at` 简写中的 `id="all"` 展开为 `type="all"`。`RawBody` 是首次匹配结束围栏之前的全部原始字符。
 
 **扫描器的额外规则：**
 
@@ -153,6 +160,8 @@ WS              = " " | "\t" | "\r" | "\n" ;
 | `forward` 容器 | 合并转发节点数组 | 转发消息容器 |
 | `msg` 自定义消息 | 自定义 `node` | `message` + `author` |
 | `msg` 原子引用 | 引用 `node` | 已有消息引用 |
+
+`[at 123]` 先展开为 `at(id="123")` 再映射协议字段；`[at all]` 展开为 `at(type="all")`，OneBot 11 使用 `at` 消息段的 `qq="all"`，Satori 使用其全体提及表示。通用形式 `[:at id="all"/]` 保留用户 ID 字面值，由宿主按用户提及处理。
 
 ### 戳一戳动作映射
 

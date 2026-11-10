@@ -1,5 +1,5 @@
 /* CQX v0.4 浏览器端解析器一致性自检
- * v0.4 增补 poke 动作元素：同时核对 v0.2 基线向量与 v0.4 累积向量，
+ * v0.4 改用 at 简写并增补 poke：核对 v0.2 / v0.3 的适用向量与 v0.4 向量，
  * 检查 parse / serializeCanonical 的往返性质，并确认在线尝试页的示例与错例
  * 都经由真实解析器，错例确实抛出预期诊断码且带有可定位的位置。
  * 运行：pnpm verify
@@ -14,12 +14,21 @@ import { faceGlyph } from '../src/scripts/cqx-try/render.js';
 
 const root = resolve(dirname(fileURLToPath(import.meta.url)), '..');
 const readVectors = (path) => JSON.parse(readFileSync(resolve(root, path), 'utf8'));
-const baseline = readVectors('reference/CQX-v0.2/conformance.json');
+const historical = [
+  readVectors('reference/CQX-v0.2/conformance.json'),
+  readVectors('scripts/conformance-v0.3.json'),
+];
 const current = readVectors('scripts/conformance-v0.4.json');
-const vectors = {
-  valid: [...baseline.valid, ...current.valid],
-  invalid: [...baseline.invalid, ...current.invalid],
-};
+// 历史提及语法的预期归属各自版本；v0.4 文件完整覆盖当前提及规则。
+const compatible = (kind) => historical.flatMap((version) => version[kind])
+  .filter((vector) => !vector.input.includes('[@'));
+// 相同输入采用当前版本的预期，保留历史版本中其余适用用例。
+const accumulate = (kind) => [...new Map(
+  [...compatible(kind), ...current[kind]].map((vector) => [vector.input, vector]),
+).values()];
+const vectors = { valid: accumulate('valid'), invalid: accumulate('invalid') };
+const skipped = historical.reduce((count, version) =>
+  count + [...version.valid, ...version.invalid].filter((vector) => vector.input.includes('[@')).length, 0);
 
 let passed = 0;
 const failures = [];
@@ -61,8 +70,9 @@ for (const vector of vectors.invalid) {
   });
 }
 
-// 参考实现随包提供的示例文件也应能通过严格解析。
-const examples = readFileSync(resolve(root, 'reference/CQX-v0.2/examples.cqx'), 'utf8');
+// 在内存中迁移历史示例的提及写法，参考文件保留原文。
+const examples = readFileSync(resolve(root, 'reference/CQX-v0.2/examples.cqx'), 'utf8')
+  .replaceAll('[@', '[at ');
 check('examples.cqx', () => {
   const ast = parse(examples);
   assert(ast.length > 0, '解析结果为空');
@@ -121,8 +131,8 @@ check('一键填入示例包含 set 用法', () => {
 });
 
 console.log(`CQX v0.4 一致性自检：${passed} 项通过，${failures.length} 项失败` +
-  `（v0.2 基线 ${baseline.valid.length + baseline.invalid.length} 项，` +
-  `v0.4 累积 ${current.valid.length + current.invalid.length} 项）`);
+  `（v0.4 向量 ${current.valid.length + current.invalid.length} 项，` +
+  `累计适用向量 ${vectors.valid.length + vectors.invalid.length} 项，历史提及向量跳过 ${skipped} 项）`);
 if (failures.length) {
   for (const line of failures) console.error(`  ✗ ${line}`);
   process.exitCode = 1;

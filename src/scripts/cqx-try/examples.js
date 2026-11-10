@@ -10,18 +10,19 @@ export const EXAMPLES = [
 文件放在 [note] 目录里，编号 [1,2,3]。
 a&b、<hello>、x=y
 
-\\[@123] 和 [@123]
+\\[at 123] 和 [at 123]
+[@123]
 C:\\Users\\Alice
 \\\\`,
   },
   {
     label: '提及与表情集',
-    code: `[@10001] 早上好，记得看一下文档 [face 14]
-[@all] 下午三点开会，别迟到～
+    code: `[at 10001] 早上好，记得看一下文档 [face 14]
+[at all] 下午三点开会，别迟到～
 [face 0] [face 23] [face 29] [face 999]
 [face 14] [face 14 set=qq] [face 14 set=animal] [face 14 set=gesture]
 [face 14 set=qq variant=super]
-[:at id="10002"/]`,
+[:at id="10002"/] [:at id="all"/] [at "123"]`,
   },
   {
     label: '戳一戳动作',
@@ -39,7 +40,7 @@ C:\\Users\\Alice
   },
   {
     label: '回复与引用',
-    code: `[@10001] 收到，我马上处理，稍等一下。[face 14]
+    code: `[at 10001] 收到，我马上处理，稍等一下。[face 14]
 [reply 42]
 [reply 43 platform=qq account=bot-1]
 [:forward id="f123"/]`,
@@ -61,11 +62,11 @@ C:\\Users\\Alice
   {
     label: '合并转发：聊天记录',
     code: `[forward]
-  [msg user=10001 name="Alice" time="2026-11-06T09:30:00+08:00"]早上好 [@10002]！[face 14 set=qq][/msg]
+  [msg user=10001 name="Alice" time="2026-11-06T09:30:00+08:00"]早上好 [at 10002]！[face 14 set=qq][/msg]
   [msg user=10002 name="Bob"]这张图给你：[img "/cqx-sample.png"][/msg]
   [msg user=10003 name="Cindy"]收到 [b]谢谢[/b]！[/msg]
 [/forward]
-[@10001] 已读。`,
+[at 10001] 已读。`,
   },
   {
     label: '引用消息与嵌套转发',
@@ -80,11 +81,11 @@ C:\\Users\\Alice
   {
     label: '原样围栏',
     code: `[code]
-print("[@all]")
+print("[at all]")
 print("[img cat.png]")
 [/code]
 
-[raw]这里的 [@all] 是普通文字[/raw]
+[raw]这里的 [at all] 是普通文字[/raw]
 [code#]print("[/code]")[/code#]
 [code lang=python]print("hello")[/code]`,
   },
@@ -108,14 +109,14 @@ export const ERROR_EXAMPLES = [
   {
     label: '闭合错配',
     expect: 'E_CLOSE',
-    code: `[@all] 下午三点开会，别迟到～
+    code: `[at all] 下午三点开会，别迟到～
 [b]记得带资料[/i]
 [img "/cqx-sample.png"]`,
   },
   {
     label: '漏写结束',
     expect: 'E_CLOSE',
-    code: `[@10001] 收到
+    code: `[at 10001] 收到
 [b]请尽快确认
 [face 14]`,
   },
@@ -123,7 +124,7 @@ export const ERROR_EXAMPLES = [
     label: '简写自闭',
     expect: 'E_SHORT_CLOSE',
     code: `[b/]加粗文字
-[@10001] 看一下`,
+[at 10001] 看一下`,
   },
   {
     label: '重复属性',
@@ -138,7 +139,7 @@ export const ERROR_EXAMPLES = [
   {
     label: '缺必需属性',
     expect: 'E_SCHEMA',
-    code: `[@10001] 这张图
+    code: `[at 10001] 这张图
 [img]`,
   },
   {

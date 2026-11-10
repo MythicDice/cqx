@@ -9,7 +9,7 @@ description: "CQX v0.4 的原子元素、容器元素、原样围栏、必需属
 
 | 类型 | 简写 | 必需属性 | 已定义可选属性 | 含义 |
 | --- | --- | --- | --- | --- |
-| `at` | `[@123]`、`[@all]` | `id` 或 `type=all` | — | 提及用户或全体成员 |
+| `at` | `[at 123]`、`[at all]` | `id` 或 `type=all` | — | 提及用户或全体成员 |
 | `img` | `[img cat.png]` | `src` | `alt` | 图片 |
 | `reply` | `[reply 42]` | `id` | `platform`、`account`、`channel` | 回复引用 |
 | `face` | `[face 14]` | `id` | `set`、`variant` | 表情 |
@@ -23,8 +23,8 @@ description: "CQX v0.4 的原子元素、容器元素、原样围栏、必需属
 一些写法如下：
 
 ```text
-[@123456]
-[@all]
+[at 123456]
+[at all]
 [:at id="all"/]
 [img "cat photo.png" alt="猫"]
 [audio voice.ogg][video demo.mp4]
@@ -34,7 +34,9 @@ description: "CQX v0.4 的原子元素、容器元素、原样围栏、必需属
 
 > **注意**
 >
-> `[@all]` 专指全体成员。要提及 ID 字面值 `all`，必须使用通用写法 `[:at id="all"/]`。
+> `[at all]` 专指全体成员。要提及 ID 字面值 `all`，必须使用通用写法 `[:at id="all"/]`。
+
+`at` 的位置参数按字符串读取，`[at "123"]` 与 `[at 123]` 等价，也可以用引号保存含空格的 ID。`at` 简写中的 `id="all"` 展开为全体提及；用户 ID 字面值 `all` 由通用形式承载。`[@123]` 是普通正文。
 
 ### 回复作用域
 

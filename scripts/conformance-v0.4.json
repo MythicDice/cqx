@@ -2,16 +2,36 @@
   "version": "0.4",
   "valid": [
     {
-      "input": "你好 [@123]",
+      "input": "[at 123]",
+      "canonical": "[:at id=\"123\"/]"
+    },
+    {
+      "input": "[:at id=\"all\"/]",
+      "canonical": "[:at id=\"all\"/]"
+    },
+    {
+      "input": "[at \"123\"]",
+      "canonical": "[:at id=\"123\"/]"
+    },
+    {
+      "input": "[@123]",
+      "canonical": "\\[@123]"
+    },
+    {
+      "input": "[at \"user id\"]",
+      "canonical": "[:at id=\"user id\"/]"
+    },
+    {
+      "input": "你好 [at 123]",
       "canonical": "你好 [:at id=\"123\"/]"
     },
     {
-      "input": "[@all]",
+      "input": "[at all]",
       "canonical": "[:at type=\"all\"/]"
     },
     {
-      "input": "\\[@all]",
-      "canonical": "\\[@all]"
+      "input": "\\[at all]",
+      "canonical": "\\[at all]"
     },
     {
       "input": "\\\\",
@@ -78,12 +98,12 @@
       "canonical": "[:x][/x]"
     },
     {
-      "input": "[raw][@all][/raw]",
-      "canonical": "\\[@all]"
+      "input": "[raw][at all][/raw]",
+      "canonical": "\\[at all]"
     },
     {
-      "input": "[code][@all][/code]",
-      "canonical": "[:code]\\[@all][/code]"
+      "input": "[code][at all][/code]",
+      "canonical": "[:code]\\[at all][/code]"
     },
     {
       "input": "[forward]\n  [msg name=Alice]你好[/msg]\n  [ref 42]\n[/forward]",
@@ -106,8 +126,8 @@
       "canonical": "[:code lang=\"python\"]print(1)[/code]"
     },
     {
-      "input": "前缀[raw][@all][/raw]后缀",
-      "canonical": "前缀\\[@all]后缀"
+      "input": "前缀[raw][at all][/raw]后缀",
+      "canonical": "前缀\\[at all]后缀"
     },
     {
       "input": "[:raw/]",
@@ -130,8 +150,8 @@
       "canonical": "[:note]内容[/note]"
     },
     {
-      "input": "[code raw]print(\"[@all]\")[/code]",
-      "canonical": "[:code]print(\"\\[@all]\")[/code]"
+      "input": "[code raw]print(\"[at all]\")[/code]",
+      "canonical": "[:code]print(\"\\[at all]\")[/code]"
     },
     {
       "input": "[poke 123]",
@@ -167,6 +187,18 @@
     }
   ],
   "invalid": [
+    {
+      "input": "[at]",
+      "code": "E_SCHEMA"
+    },
+    {
+      "input": "[at 123 id=4]",
+      "code": "E_ATTR_DUP"
+    },
+    {
+      "input": "[at all id=4]",
+      "code": "E_ATTR_DUP"
+    },
     {
       "input": "[img]",
       "code": "E_SCHEMA"
@@ -208,7 +240,7 @@
       "code": "E_RAW_CLOSE"
     },
     {
-      "input": "[:code][@all][/code]",
+      "input": "[:code][at all][/code]",
       "code": "E_SCHEMA"
     },
     {

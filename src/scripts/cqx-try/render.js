@@ -190,7 +190,7 @@ function renderFace(node) {
 }
 
 function renderAt(node) {
-  const all = node.attrs.type === 'all' || node.attrs.id === 'all';
+  const all = node.attrs.type === 'all';
   return el('span', 'cqx-at', all ? '@全体成员' : `@${node.attrs.id ?? ''}`);
 }
 
